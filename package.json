@@ -1,0 +1,60 @@
+{
+  "author": {
+    "email": "yury@strozhevsky.com",
+    "name": "Yury Strozhevsky"
+  },
+  "contributors": [
+    {
+      "email": "rmh@unmitigatedrisk.com",
+      "name": "Ryan Hurst"
+    }
+  ],
+  "name": "fontjs",
+  "version": "1.0.1",
+  "description": "FontJS (Font.js) is a packages for TrueType font parsing and manipulation",
+  "jsnext:main": "./src/index.js",
+  "module": "./src/index.js",
+  "main": "./build/index.js",
+  "scripts": {
+    "build": "babel src --compact=false --out-dir build --source-maps",
+    "build:docs": "esdoc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "TrueType"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/PeculiarVentures/Font.js.git"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.0.0",
+    "@babel/core": "^7.0.0",
+    "babel-plugin-istanbul": "latest",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/register": "^7.0.0",
+    "cross-env": "latest",
+    "esdoc": "latest",
+    "esdoc-standard-plugin": "latest",
+    "eslint": "latest",
+    "mocha": "latest",
+    "nyc": "latest",
+    "rollup": "latest",
+    "rollup-plugin-commonjs": "latest",
+    "rollup-plugin-node-builtins": "latest",
+    "rollup-plugin-node-resolve": "4.0.1"
+  },
+  "dependencies": {
+    "bytestreamjs": "^1.0.28"
+  },
+  "esdoc": {
+    "source": "./src",
+    "destination": "./docs",
+    "plugins": [
+      {
+        "name": "esdoc-standard-plugin"
+      }
+    ]
+  },
+  "license": "BSD-3-Clause"
+}
