@@ -104,12 +104,12 @@ export class SimpleGlyphFlags
 	//**********************************************************************************
 }
 //**************************************************************************************
-export class ComponentGlyphFlags
+export class CompoundGlyphFlags
 {
 	//**********************************************************************************
 	constructor()
 	{
-		throw new Error("Only static methods allowed for ComponentGlyphFlags");
+		throw new Error("Only static methods allowed for CompoundGlyphFlags");
 	}
 	//**********************************************************************************
 	/**
@@ -242,12 +242,798 @@ export class Glyph extends BaseClass
 	{
 		super();
 
-		this.glyphs = parameters.glyphs || [];
+		this.stream = parameters.stream || new SeqStream();
+
+		if("numberOfContours" in parameters)
+			this.numberOfContours = parameters.numberOfContours;
+		if("xMin" in parameters)
+			this.xMin = parameters.xMin;
+		if("yMin" in parameters)
+			this.yMin = parameters.yMin;
+		if("xMax" in parameters)
+			this.xMax = parameters.xMax;
+		if("yMax" in parameters)
+			this.yMax = parameters.yMax;
 	}
 	//**********************************************************************************
 	static get className()
 	{
 		return "Glyph";
+	}
+	//**********************************************************************************
+	static new(stream)
+	{
+		const numberOfContours = stream.getInt16();
+		stream.resetPosition();
+
+		switch(true)
+		{
+			case (numberOfContours === 0):
+				return new EmptyGlyph({ stream });
+			case (numberOfContours > 0):
+				return new SimpleGlyph({ stream });
+			case (numberOfContours < 0):
+				return new CompoundGlyph({ stream });
+		}
+	}
+	//**********************************************************************************
+	decode()
+	{
+		this.numberOfContours = this.stream.getInt16();
+		this.xMin = this.stream.getInt16();
+		this.yMin = this.stream.getInt16();
+		this.xMax = this.stream.getInt16();
+		this.yMax = this.stream.getInt16();
+	}
+	//**********************************************************************************
+	encode(stream)
+	{
+		if("_numberOfContours" in this === false)
+			this.decode();
+
+		stream.appendInt16(this.numberOfContours);
+		stream.appendInt16(this.xMin);
+		stream.appendInt16(this.yMin);
+		stream.appendInt16(this.xMax);
+		stream.appendInt16(this.yMax);
+	}
+	//**********************************************************************************
+	get numberOfContours()
+	{
+		if("_numberOfContours" in this === false)
+			this.decode();
+
+		return this._numberOfContours;
+	}
+	//**********************************************************************************
+	set numberOfContours(value)
+	{
+		this._numberOfContours = value;
+	}
+	//**********************************************************************************
+	get xMin()
+	{
+		if("_xMin" in this === false)
+			this.decode();
+
+		return this._xMin;
+	}
+	//**********************************************************************************
+	set xMin(value)
+	{
+		this._xMin = value;
+	}
+	//**********************************************************************************
+	get yMin()
+	{
+		if("_yMin" in this === false)
+			this.decode();
+
+		return this._yMin;
+	}
+	//**********************************************************************************
+	set yMin(value)
+	{
+		this._yMin = value;
+	}
+	//**********************************************************************************
+	get xMax()
+	{
+		if("_xMax" in this === false)
+			this.decode();
+
+		return this._xMax;
+	}
+	//**********************************************************************************
+	set xMax(value)
+	{
+		this._xMax = value;
+	}
+	//**********************************************************************************
+	get yMax()
+	{
+		if("_yMax" in this === false)
+			this.decode();
+
+		return this._yMax;
+	}
+	//**********************************************************************************
+	set yMax(value)
+	{
+		this._yMax = value;
+	}
+	//**********************************************************************************
+}
+//**************************************************************************************
+export class EmptyGlyph extends Glyph
+{
+	//**********************************************************************************
+	constructor(parameters = {})
+	{
+		super(parameters);
+	}
+	//**********************************************************************************
+	static get className()
+	{
+		return "EmptyGlyph";
+	}
+	//**********************************************************************************
+	decode()
+	{
+		super.decode();
+
+		if(this.numberOfContours !== 0)
+			throw new Error(`Incorrect numberOfContours for EmptyGlyph class: ${this.numberOfContours}`);
+	}
+	//**********************************************************************************
+	encode(stream)
+	{
+		// Nothing should be encoded here
+	}
+	//**********************************************************************************
+}
+//**************************************************************************************
+export class SimpleGlyph extends Glyph
+{
+	//**********************************************************************************
+	constructor(parameters = {})
+	{
+		super(parameters);
+
+		if("endPtsOfContours" in parameters)
+			this.endPtsOfContours = parameters.endPtsOfContours;
+		if("instructions" in parameters)
+			this.instructions = parameters.instructions;
+		if("flags" in parameters)
+			this.flags = parameters.flags;
+		if("xCoordinates" in parameters)
+			this.xCoordinates = parameters.xCoordinates;
+		if("yCoordinates" in parameters)
+			this.yCoordinates = parameters.yCoordinates;
+	}
+	//**********************************************************************************
+	static get className()
+	{
+		return "SimpleGlyph";
+	}
+	//**********************************************************************************
+	decode()
+	{
+		super.decode();
+
+		//region Check we have a correct numberOfContours
+		if((this.numberOfContours === 0) || (this.numberOfContours < 0))
+			throw new Error(`Incorrect numberOfContours for SimpleGlyph class: ${this.numberOfContours}`);
+		//endregion
+
+		//region Initial variables
+		this.endPtsOfContours = [];
+		this.instructions = [];
+		this.flags = [];
+		this.xCoordinates = [];
+		this.yCoordinates = [];
+		//endregion
+
+		//region Fill "endPtsOfContours"
+		for(let i = 0; i < this.numberOfContours; i++)
+		{
+			const endPtOfContour = this.stream.getUint16();
+			this.endPtsOfContours.push(endPtOfContour);
+		}
+		//endregion
+
+		//region Fill "instructions"
+		const instructionLength = this.stream.getUint16();
+
+		for(let i = 0; i < instructionLength; i++)
+		{
+			const instruction = this.stream.getBlock(1);
+			this.instructions.push(instruction[0]);
+		}
+		//endregion
+
+		const numberOfCoordinates = this.endPtsOfContours[this.endPtsOfContours.length - 1] + 1;
+		//region Fill "flags"
+
+		for(let i = 0; i < numberOfCoordinates; i++)
+		{
+			const flag = this.stream.getBlock(1);
+			this.flags.push(flag[0]);
+
+			if(flag[0] & SimpleGlyphFlags.REPEAT_FLAG)
+			{
+				const repeatCount = this.stream.getBlock(1);
+				for(let j = 0; j < repeatCount[0]; j++)
+				{
+					this.flags.push(flag[0]);
+					i += 1;
+				}
+			}
+		}
+		//endregion
+
+		//region Put correct flags at all beggining of contours
+		this.flags[0] |= SimpleGlyphFlags.OVERLAP_SIMPLE;
+
+		for(let i = 0; i < (this.endPtsOfContours.length - 1); i++)
+			this.flags[this.endPtsOfContours[i] + 1] |= SimpleGlyphFlags.OVERLAP_SIMPLE;
+		//endregion
+
+		//region Fill X coordinates
+		let p = 0;
+
+		for(const flag of this.flags)
+		{
+			let x = 0;
+
+			if((flag & SimpleGlyphFlags.X_SHORT_VECTOR) === SimpleGlyphFlags.X_SHORT_VECTOR)
+			{
+				x = (this.stream.getBlock(1))[0];
+
+				if((flag & SimpleGlyphFlags.X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR) === 0)
+					x = (-x);
+
+				x += p;
+			}
+			else
+			{
+				if((flag & SimpleGlyphFlags.X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR) === SimpleGlyphFlags.X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR)
+					x = p;
+				else
+					x = p + this.stream.getInt16();
+			}
+
+			this.xCoordinates.push(x);
+
+			p = x;
+		}
+		//endregion
+
+		//region Fill Y coordinates
+		p = 0;
+
+		for(const flag of this.flags)
+		{
+			let y = 0;
+
+			if((flag & SimpleGlyphFlags.Y_SHORT_VECTOR) === SimpleGlyphFlags.Y_SHORT_VECTOR)
+			{
+				y = (this.stream.getBlock(1))[0];
+
+				if((flag & SimpleGlyphFlags.Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR) === 0)
+					y = (-y);
+
+				y += p;
+			}
+			else
+			{
+				if((flag & SimpleGlyphFlags.Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR) === SimpleGlyphFlags.Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR)
+					y = p;
+				else
+					y = p + this.stream.getInt16();
+			}
+
+			this.yCoordinates.push(y);
+
+			p = y;
+		}
+		//endregion
+	}
+	//**********************************************************************************
+	encode(stream)
+	{
+		super.encode(stream);
+
+		//region Store previous length of the stream
+		const prevLength = stream.length;
+		//endregion
+
+		//region Check consistency
+		const numberOfCoordinates = this.endPtsOfContours[this.endPtsOfContours.length - 1] + 1;
+
+		if(this.flags.length !== numberOfCoordinates)
+			throw new Error("Inconsistency between length of 'flags' and 'endPtsOfContours' values");
+
+		if(this.xCoordinates.length !== numberOfCoordinates)
+			throw new Error("Inconsistency between length of 'xCoordinates' and 'endPtsOfContours' values");
+
+		if(this.yCoordinates.length !== numberOfCoordinates)
+			throw new Error("Inconsistency between length of 'yCoordinates' and 'endPtsOfContours' values");
+		//endregion
+
+		//region Put "endPtsOfContours" values
+		for(const endPtOfContour of this.endPtsOfContours)
+			stream.appendUint16(endPtOfContour);
+		//endregion
+
+		//region Put "instructions" values
+		stream.appendUint16(this.instructions.length);
+
+		if(this.instructions.length)
+			stream.appendView(new Uint8Array(this.instructions));
+		//endregion
+
+		//region Put "flags" values
+		const flagBytes = [];
+
+		for(let i = 0; i < this.flags.length;)
+		{
+			let flag = this.flags[i];
+
+			if(checkFlag(flag, SimpleGlyphFlags.REPEAT_FLAG))
+			{
+				let repeatCount = 0;
+
+				for (i++; i < this.flags.length; i++, repeatCount++)
+				{
+					if (this.flags[i] !== flag)
+						break;
+				}
+
+				if (repeatCount)
+				{
+					flagBytes.push(flag);
+					flagBytes.push(repeatCount);
+				}
+				else
+				{
+					flag &= ~SimpleGlyphFlags.REPEAT_FLAG;
+					flagBytes.push(flag);
+				}
+
+			}
+			else
+			{
+				flagBytes.push(flag);
+				i++;
+			}
+		}
+
+		stream.appendView(new Uint8Array(flagBytes));
+		//endregion
+
+		//region Put X coordinates
+		let p = 0;
+
+		for(let i = 0; i < this.xCoordinates.length; i++)
+		{
+			const flag = this.flags[i];
+
+			let x = this.xCoordinates[i];
+			let real = x;
+
+			if((flag & SimpleGlyphFlags.X_SHORT_VECTOR) === SimpleGlyphFlags.X_SHORT_VECTOR)
+			{
+				if((flag & SimpleGlyphFlags.X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR) === 0)
+				{
+					x = (-x);
+					p = (-p);
+				}
+
+				x -= p;
+
+				stream.appendView(new Uint8Array([x]));
+			}
+			else
+			{
+				if((flag & SimpleGlyphFlags.X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR) === SimpleGlyphFlags.X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR)
+					x = p;
+				else
+				{
+					x -= p;
+
+					stream.appendInt16(x);
+				}
+			}
+
+			p = real;
+		}
+		//endregion
+
+		//region Put Y coordinates
+		p = 0;
+
+		for(let i = 0; i < this.yCoordinates.length; i++)
+		{
+			const flag = this.flags[i];
+
+			let y = this.yCoordinates[i];
+			let real = y;
+
+			if((flag & SimpleGlyphFlags.Y_SHORT_VECTOR) === SimpleGlyphFlags.Y_SHORT_VECTOR)
+			{
+				if((flag & SimpleGlyphFlags.Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR) === 0)
+				{
+					y = (-y);
+					p = (-p);
+				}
+
+				y -= p;
+
+				stream.appendView(new Uint8Array([y]));
+			}
+			else
+			{
+				if((flag & SimpleGlyphFlags.Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR) === SimpleGlyphFlags.Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR)
+					y = p;
+				else
+				{
+					y -= p;
+
+					stream.appendInt16(y);
+				}
+			}
+
+			p = real;
+		}
+		//endregion
+
+		//region Padding to even length
+		if((stream.length - prevLength) %2)
+			stream.appendView(new Uint8Array([0]));
+		//endregion
+	}
+	//**********************************************************************************
+	get endPtsOfContours()
+	{
+		if("_endPtsOfContours" in this === false)
+			this.decode();
+
+		return this._endPtsOfContours;
+	}
+	//**********************************************************************************
+	set endPtsOfContours(value)
+	{
+		this._endPtsOfContours = value;
+	}
+	//**********************************************************************************
+	get instructions()
+	{
+		if("_instructions" in this === false)
+			this.decode();
+
+		return this._instructions;
+	}
+	//**********************************************************************************
+	set instructions(value)
+	{
+		this._instructions = value;
+	}
+	//**********************************************************************************
+	get flags()
+	{
+		if("_flags" in this === false)
+			this.decode();
+
+		return this._flags;
+	}
+	//**********************************************************************************
+	set flags(value)
+	{
+		this._flags = value;
+	}
+	//**********************************************************************************
+	get xCoordinates()
+	{
+		if("_xCoordinates" in this === false)
+			this.decode();
+
+		return this._xCoordinates;
+	}
+	//**********************************************************************************
+	set xCoordinates(value)
+	{
+		this._xCoordinates = value;
+	}
+	//**********************************************************************************
+	get yCoordinates()
+	{
+		if("_yCoordinates" in this === false)
+			this.decode();
+
+		return this._yCoordinates;
+	}
+	//**********************************************************************************
+	set yCoordinates(value)
+	{
+		this._yCoordinates = value;
+	}
+	//**********************************************************************************
+}
+//**************************************************************************************
+export class CompoundGlyph extends Glyph
+{
+	//**********************************************************************************
+	constructor(parameters = {})
+	{
+		super(parameters);
+
+		if("components" in parameters)
+			this.components = parameters.components;
+		if("instructions" in parameters)
+			this.instructions = parameters.instructions;
+	}
+	//**********************************************************************************
+	static get className()
+	{
+		return "CompoundGlyph";
+	}
+	//**********************************************************************************
+	decode()
+	{
+		super.decode();
+
+		//region Check we have a correct numberOfContours
+		if((this.numberOfContours === 0) || (this.numberOfContours > 0))
+			throw new Error(`Incorrect numberOfContours for CompoundGlyph class: ${this.numberOfContours}`);
+		//endregion
+
+		//region Initial variables
+		let flags = 0;
+		this.instructions = [];
+		this.components = [];
+		//endregion
+
+		//region Read components
+		do
+		{
+			//region Initial variables
+			const matrix = new Matrix();
+
+			let matchingPoint1 = null;
+			let matchingPoint2 = null;
+			//endregion
+
+			//region Read basic information
+			flags = this.stream.getUint16();
+			const glyphIndex = this.stream.getUint16();
+			//endregion
+
+			//region Read translation coordinates
+			switch(true)
+			{
+				case (checkFlag(flags, CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS) && checkFlag(flags, CompoundGlyphFlags.ARGS_ARE_XY_VALUES)):
+					matrix.e = this.stream.getInt16();
+					matrix.f = this.stream.getInt16();
+
+					break;
+				case (!checkFlag(flags, CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS) && checkFlag(flags, CompoundGlyphFlags.ARGS_ARE_XY_VALUES)):
+					matrix.e = (this.stream.getBlock(1))[0];
+					matrix.f = (this.stream.getBlock(1))[0];
+
+					break;
+				case (checkFlag(flags, CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS) && !checkFlag(flags, CompoundGlyphFlags.ARGS_ARE_XY_VALUES)):
+					matchingPoint1 = this.stream.getInt16();
+					matchingPoint2 = this.stream.getInt16();
+
+					break;
+				case (!checkFlag(flags, CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS) && !checkFlag(flags, CompoundGlyphFlags.ARGS_ARE_XY_VALUES)):
+					matchingPoint1 = (this.stream.getBlock(1))[0];
+					matchingPoint2 = (this.stream.getBlock(1))[0];
+
+					break;
+			}
+			//endregion
+
+			//region Read scaling and rotation details
+			switch(true)
+			{
+				case checkFlag(flags, CompoundGlyphFlags.WE_HAVE_A_SCALE):
+					matrix.a = getF2Dot14(this.stream);
+					matrix.d = matrix.a;
+
+					break;
+				case checkFlag(flags, CompoundGlyphFlags.WE_HAVE_AN_X_AND_Y_SCALE):
+					matrix.a = getF2Dot14(this.stream);
+					matrix.d = getF2Dot14(this.stream);
+
+					break;
+				case checkFlag(flags, CompoundGlyphFlags.WE_HAVE_A_TWO_BY_TWO):
+					matrix.a = getF2Dot14(this.stream);
+					matrix.b = getF2Dot14(this.stream);
+					matrix.c = getF2Dot14(this.stream);
+					matrix.d = getF2Dot14(this.stream);
+
+					break;
+			}
+			//endregion
+
+			const componentParameters = {
+				glyphIndex,
+				flags,
+				matrix
+			};
+
+			if(matchingPoint1 !== null)
+			{
+				componentParameters.matchingPoint1 = matchingPoint1;
+				componentParameters.matchingPoint2 = matchingPoint2;
+			}
+
+			this.components.push(
+				componentParameters
+			);
+
+		}while(checkFlag(flags, CompoundGlyphFlags.MORE_COMPONENTS));
+		//endregion
+
+		//region Read instructions
+		if(checkFlag(flags, CompoundGlyphFlags.WE_HAVE_INSTRUCTIONS))
+		{
+			const numInstr = this.stream.getUint16();
+
+			for(let i = 0; i < numInstr; i++)
+			{
+				const instruction = (this.stream.getBlock(1))[0];
+				this.instructions.push(instruction);
+			}
+		}
+		//endregion
+	}
+	//**********************************************************************************
+	encode(stream)
+	{
+		super.encode(stream);
+
+		//region Store information about components
+		for(let i = 0; i < this.components.length; i++)
+		{
+			const component = this.components[i];
+
+			//region Set correct "flags" value
+			let flags = component.flags;
+
+			if((typeof component.matchingPoint1 !== "undefined") || (typeof component.matchingPoint2 !== "undefined"))
+			{
+				flags &= ~CompoundGlyphFlags.ARGS_ARE_XY_VALUES;
+
+				if((component.matchingPoint1 > 255) ||
+					(component.matchingPoint1 < 0) ||
+					(component.matchingPoint2 > 255) ||
+					(component.matchingPoint2 < 0))
+					flags |= CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS;
+				else
+					flags &= ~CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS;
+			}
+			else
+			{
+				flags |= CompoundGlyphFlags.ARGS_ARE_XY_VALUES;
+
+				if((component.matrix.e > 255) ||
+					(component.matrix.e < 0) ||
+					(component.matrix.f > 255) ||
+					(component.matrix.f < 0))
+					flags |= CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS;
+				else
+				{
+					flags &= ~CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS;
+				}
+			}
+
+			if(component.matrix.b || component.matrix.c)
+				flags |= CompoundGlyphFlags.WE_HAVE_A_TWO_BY_TWO;
+			else
+			{
+				if((component.matrix.a !== 1) || (component.matrix.d !== 1))
+				{
+					if(component.matrix.a !== component.matrix.d)
+						flags |= CompoundGlyphFlags.WE_HAVE_AN_X_AND_Y_SCALE;
+					else
+						flags |= CompoundGlyphFlags.WE_HAVE_A_SCALE;
+				}
+			}
+
+			if(i < (this.components.length - 1))
+				flags |= CompoundGlyphFlags.MORE_COMPONENTS;
+			//endregion
+
+			//region Store informatin about flags and glyph index first
+			stream.appendUint16(flags);
+			stream.appendUint16(component.glyphIndex);
+			//endregion
+
+			//region Store translation coordinates
+			switch(true)
+			{
+				case (checkFlag(flags, CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS) && checkFlag(flags, CompoundGlyphFlags.ARGS_ARE_XY_VALUES)):
+					stream.appendInt16(component.matrix.e);
+					stream.appendInt16(component.matrix.f);
+
+					break;
+				case (!checkFlag(flags, CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS) && checkFlag(flags, CompoundGlyphFlags.ARGS_ARE_XY_VALUES)):
+					stream.appendView(new Uint8Array([component.matrix.e]));
+					stream.appendView(new Uint8Array([component.matrix.f]));
+
+					break;
+				case (checkFlag(flags, CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS) && !checkFlag(flags, CompoundGlyphFlags.ARGS_ARE_XY_VALUES)):
+					stream.appendInt16(component.matchingPoint1);
+					stream.appendInt16(component.matchingPoint2);
+
+					break;
+				case (!checkFlag(flags, CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS) && !checkFlag(flags, CompoundGlyphFlags.ARGS_ARE_XY_VALUES)):
+					stream.appendView(new Uint8Array([component.matchingPoint1]));
+					stream.appendView(new Uint8Array([component.matchingPoint2]));
+
+					break;
+			}
+			//endregion
+
+			//region Store scaling and rotation details
+			switch(true)
+			{
+				case checkFlag(flags, CompoundGlyphFlags.WE_HAVE_A_SCALE):
+					appendF2Dot14(component.matrix.a, stream);
+
+					break;
+				case checkFlag(flags, CompoundGlyphFlags.WE_HAVE_AN_X_AND_Y_SCALE):
+					appendF2Dot14(component.matrix.a, stream);
+					appendF2Dot14(component.matrix.d, stream);
+
+					break;
+				case checkFlag(flags, CompoundGlyphFlags.WE_HAVE_A_TWO_BY_TWO):
+					appendF2Dot14(component.matrix.a, stream);
+					appendF2Dot14(component.matrix.b, stream);
+					appendF2Dot14(component.matrix.c, stream);
+					appendF2Dot14(component.matrix.d, stream);
+
+					break;
+			}
+			//endregion
+		}
+		//endregion
+
+		//region Store information about instruction
+		stream.appendUint16(this.instructions.length);
+
+		if(this.instructions.length)
+			stream.appendView(new Uint8Array(this.instructions));
+		//endregion
+	}
+	//**********************************************************************************
+	get components()
+	{
+		if("_components" in this === false)
+			this.decode();
+
+		return this._components;
+	}
+	//**********************************************************************************
+	set components(value)
+	{
+		this._components = value;
+	}
+	//**********************************************************************************
+	get instructions()
+	{
+		if("_instructions" in this === false)
+			this.decode();
+
+		return this._instructions;
+	}
+	//**********************************************************************************
+	set instructions(value)
+	{
+		this._instructions = value;
 	}
 	//**********************************************************************************
 }
@@ -295,283 +1081,7 @@ export class GLYF extends BaseClass
 			const prevLength = stream.length;
 			//endregion
 
-			//region Put main values
-			stream.appendInt16(glyph.numberOfContours);
-			stream.appendInt16(glyph.xMin);
-			stream.appendInt16(glyph.yMin);
-			stream.appendInt16(glyph.xMax);
-			stream.appendInt16(glyph.yMax);
-			//endregion
-
-			//region Work with simple glyph
-			if(glyph.numberOfContours > 0)
-			{
-				//region Check consistency
-				const numberOfCoordinates = glyph.endPtsOfContours[glyph.endPtsOfContours.length - 1] + 1;
-
-				if(glyph.flags.length !== numberOfCoordinates)
-					throw new Error("Inconsistency between length of 'flags' and 'endPtsOfContours' values");
-
-				if(glyph.xCoordinates.length !== numberOfCoordinates)
-					throw new Error("Inconsistency between length of 'xCoordinates' and 'endPtsOfContours' values");
-
-				if(glyph.yCoordinates.length !== numberOfCoordinates)
-					throw new Error("Inconsistency between length of 'yCoordinates' and 'endPtsOfContours' values");
-				//endregion
-
-				//region Put "endPtsOfContours" values
-				for(const endPtOfContour of glyph.endPtsOfContours)
-					stream.appendUint16(endPtOfContour);
-				//endregion
-
-				//region Put "instructions" values
-				stream.appendUint16(glyph.instructions.length);
-
-				if(glyph.instructions.length)
-					stream.appendView(new Uint8Array(glyph.instructions));
-				//endregion
-
-				//region Put "flags" values
-				const flagBytes = [];
-
-				for(let i = 0; i < glyph.flags.length;)
-				{
-					let flag = glyph.flags[i];
-
-					if(checkFlag(flag, SimpleGlyphFlags.REPEAT_FLAG))
-					{
-						let repeatCount = 0;
-
-						// noinspection AssignmentToForLoopParameterJS
-						for (i++; i < glyph.flags.length; i++, repeatCount++)
-						{
-							if (glyph.flags[i] !== flag)
-								break;
-						}
-
-						if (repeatCount)
-						{
-							flagBytes.push(flag);
-							flagBytes.push(repeatCount);
-						}
-						else
-						{
-							flag &= ~SimpleGlyphFlags.REPEAT_FLAG;
-							flagBytes.push(flag);
-						}
-
-					}
-					else
-					{
-						flagBytes.push(flag);
-						// noinspection AssignmentToForLoopParameterJS
-						i++;
-					}
-				}
-
-				stream.appendView(new Uint8Array(flagBytes));
-				//endregion
-
-				//region Put X coordinates
-				let p = 0;
-
-				for(let i = 0; i < glyph.xCoordinates.length; i++)
-				{
-					const flag = glyph.flags[i];
-
-					let x = glyph.xCoordinates[i];
-					let real = x;
-
-					if((flag & SimpleGlyphFlags.X_SHORT_VECTOR) === SimpleGlyphFlags.X_SHORT_VECTOR)
-					{
-						if((flag & SimpleGlyphFlags.X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR) === 0)
-						{
-							x = (-x);
-							p = (-p);
-						}
-
-						x -= p;
-
-						stream.appendView(new Uint8Array([x]));
-					}
-					else
-					{
-						if((flag & SimpleGlyphFlags.X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR) === SimpleGlyphFlags.X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR)
-							x = p;
-						else
-						{
-							x -= p;
-
-							stream.appendInt16(x);
-						}
-					}
-
-					p = real;
-				}
-				//endregion
-
-				//region Put Y coordinates
-				p = 0;
-
-				for(let i = 0; i < glyph.yCoordinates.length; i++)
-				{
-					const flag = glyph.flags[i];
-
-					let y = glyph.yCoordinates[i];
-					let real = y;
-
-					if((flag & SimpleGlyphFlags.Y_SHORT_VECTOR) === SimpleGlyphFlags.Y_SHORT_VECTOR)
-					{
-						if((flag & SimpleGlyphFlags.Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR) === 0)
-						{
-							y = (-y);
-							p = (-p);
-						}
-
-						y -= p;
-
-						stream.appendView(new Uint8Array([y]));
-					}
-					else
-					{
-						if((flag & SimpleGlyphFlags.Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR) === SimpleGlyphFlags.Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR)
-							y = p;
-						else
-						{
-							y -= p;
-
-							stream.appendInt16(y);
-						}
-					}
-
-					p = real;
-				}
-				//endregion
-
-				//region Padding to even length
-				if((stream.length - prevLength) %2)
-					stream.appendView(new Uint8Array([0]));
-				//endregion
-			}
-			//endregion
-			//region Work with compound glyphs
-			else
-			{
-				//region Store information about components
-				for(let i = 0; i < glyph.components.length; i++)
-				{
-					const component = glyph.components[i];
-
-					//region Set correct "flags" value
-					let flags = component.flags;
-
-					if((typeof component.matchingPoint1 !== "undefined") || (typeof component.matchingPoint2 !== "undefined"))
-					{
-						flags &= ~ComponentGlyphFlags.ARGS_ARE_XY_VALUES;
-
-						if((component.matchingPoint1 > 255) ||
-							(component.matchingPoint1 < 0) ||
-							(component.matchingPoint2 > 255) ||
-							(component.matchingPoint2 < 0))
-							flags |= ComponentGlyphFlags.ARG_1_AND_2_ARE_WORDS;
-						else
-							flags &= ~ComponentGlyphFlags.ARG_1_AND_2_ARE_WORDS;
-					}
-					else
-					{
-						flags |= ComponentGlyphFlags.ARGS_ARE_XY_VALUES;
-
-						if((component.matrix.e > 255) ||
-							(component.matrix.e < 0) ||
-							(component.matrix.f > 255) ||
-							(component.matrix.f < 0))
-							flags |= ComponentGlyphFlags.ARG_1_AND_2_ARE_WORDS;
-						else
-						{
-							flags &= ~ComponentGlyphFlags.ARG_1_AND_2_ARE_WORDS;
-						}
-					}
-
-					if(component.matrix.b || component.matrix.c)
-						flags |= ComponentGlyphFlags.WE_HAVE_A_TWO_BY_TWO;
-					else
-					{
-						if((component.matrix.a !== 1) || (component.matrix.d !== 1))
-						{
-							if(component.matrix.a !== component.matrix.d)
-								flags |= ComponentGlyphFlags.WE_HAVE_AN_X_AND_Y_SCALE;
-							else
-								flags |= ComponentGlyphFlags.WE_HAVE_A_SCALE;
-						}
-					}
-
-					if(i < (glyph.components.length - 1))
-						flags |= ComponentGlyphFlags.MORE_COMPONENTS;
-					//endregion
-
-					//region Store informatin about flags and glyph index first
-					stream.appendUint16(flags);
-					stream.appendUint16(component.glyphIndex);
-					//endregion
-
-					//region Store translation coordinates
-					switch(true)
-					{
-						case (checkFlag(flags, ComponentGlyphFlags.ARG_1_AND_2_ARE_WORDS) && checkFlag(flags, ComponentGlyphFlags.ARGS_ARE_XY_VALUES)):
-							stream.appendInt16(component.matrix.e);
-							stream.appendInt16(component.matrix.f);
-
-							break;
-						case (!checkFlag(flags, ComponentGlyphFlags.ARG_1_AND_2_ARE_WORDS) && checkFlag(flags, ComponentGlyphFlags.ARGS_ARE_XY_VALUES)):
-							stream.appendView(new Uint8Array([component.matrix.e]));
-							stream.appendView(new Uint8Array([component.matrix.f]));
-
-							break;
-						case (checkFlag(flags, ComponentGlyphFlags.ARG_1_AND_2_ARE_WORDS) && !checkFlag(flags, ComponentGlyphFlags.ARGS_ARE_XY_VALUES)):
-							stream.appendInt16(component.matchingPoint1);
-							stream.appendInt16(component.matchingPoint2);
-
-							break;
-						case (!checkFlag(flags, ComponentGlyphFlags.ARG_1_AND_2_ARE_WORDS) && !checkFlag(flags, ComponentGlyphFlags.ARGS_ARE_XY_VALUES)):
-							stream.appendView(new Uint8Array([component.matchingPoint1]));
-							stream.appendView(new Uint8Array([component.matchingPoint2]));
-
-							break;
-					}
-					//endregion
-
-					//region Store scaling and rotation details
-					switch(true)
-					{
-						case checkFlag(flags, ComponentGlyphFlags.WE_HAVE_A_SCALE):
-							appendF2Dot14(component.matrix.a, stream);
-
-							break;
-						case checkFlag(flags, ComponentGlyphFlags.WE_HAVE_AN_X_AND_Y_SCALE):
-							appendF2Dot14(component.matrix.a, stream);
-							appendF2Dot14(component.matrix.d, stream);
-
-							break;
-						case checkFlag(flags, ComponentGlyphFlags.WE_HAVE_A_TWO_BY_TWO):
-							appendF2Dot14(component.matrix.a, stream);
-							appendF2Dot14(component.matrix.b, stream);
-							appendF2Dot14(component.matrix.c, stream);
-							appendF2Dot14(component.matrix.d, stream);
-
-							break;
-					}
-					//endregion
-				}
-				//endregion
-
-				//region Store information about instruction
-				stream.appendUint16(glyph.instructions.length);
-
-				if(glyph.instructions.length)
-					stream.appendView(new Uint8Array(glyph.instructions));
-				//endregion
-			}
-			//endregion
+			glyph.encode(stream);
 
 			//region Update "loca" table
 			this.loca.push(stream.length - prevLength + this.loca[this.loca.length - 1]);
@@ -612,290 +1122,7 @@ export class GLYF extends BaseClass
 		}
 		//endregion
 
-		//region Initial variables
-		const glyphs = [];
-		//endregion
-
-		//region Parse all glyphs
-		for(const glyphStream of streams)
-		{
-			//region Fill main values
-			const numberOfContours = glyphStream.getInt16();
-			const xMin = glyphStream.getInt16();
-			const yMin = glyphStream.getInt16();
-			const xMax = glyphStream.getInt16();
-			const yMax = glyphStream.getInt16();
-			//endregion
-
-			switch(true)
-			{
-				case (numberOfContours === 0):
-					glyphs.push({
-						glyphStream,
-						numberOfContours,
-						xMin,
-						yMin,
-						xMax,
-						yMax
-					});
-
-					break;
-				case (numberOfContours > 0):
-					{
-						//region Initial variables
-						const endPtsOfContours = [];
-						const instructions = [];
-						const flags = [];
-						const xCoordinates = [];
-						const yCoordinates = [];
-						//endregion
-
-						//region Fill "endPtsOfContours"
-						for(let i = 0; i < numberOfContours; i++)
-						{
-							const endPtOfContour = glyphStream.getUint16();
-							endPtsOfContours.push(endPtOfContour);
-						}
-						//endregion
-
-						//region Fill "instructions"
-						const instructionLength = glyphStream.getUint16();
-
-						for(let i = 0; i < instructionLength; i++)
-						{
-							const instruction = glyphStream.getBlock(1);
-							instructions.push(instruction[0]);
-						}
-						//endregion
-
-						//region Fill "flags"
-						const numberOfCoordinates = endPtsOfContours[endPtsOfContours.length - 1] + 1;
-						
-						for(let i = 0; i < numberOfCoordinates; i++)
-						{
-							const flag = glyphStream.getBlock(1);
-							flags.push(flag[0]);
-
-							// noinspection JSBitwiseOperatorUsage
-							if(flag[0] & SimpleGlyphFlags.REPEAT_FLAG)
-							{
-								const repeatCount = glyphStream.getBlock(1);
-								for(let j = 0; j < repeatCount[0]; j++)
-								{
-									flags.push(flag[0]);
-									i += 1;
-								}
-							}
-						}
-						//endregion
-
-						//region Put correct flags at all beggining of contours
-						flags[0] |= SimpleGlyphFlags.OVERLAP_SIMPLE;
-
-						for(let i = 0; i < (endPtsOfContours.length - 1); i++)
-							flags[endPtsOfContours[i] + 1] |= SimpleGlyphFlags.OVERLAP_SIMPLE;
-						//endregion
-
-						//region Fill X coordinates
-						let p = 0;
-
-						for(const flag of flags)
-						{
-							let x = 0;
-
-							if((flag & SimpleGlyphFlags.X_SHORT_VECTOR) === SimpleGlyphFlags.X_SHORT_VECTOR)
-							{
-								x = (glyphStream.getBlock(1))[0];
-
-								if((flag & SimpleGlyphFlags.X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR) === 0)
-									x = (-x);
-
-								x += p;
-							}
-							else
-							{
-								if((flag & SimpleGlyphFlags.X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR) === SimpleGlyphFlags.X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR)
-									x = p;
-								else
-									x = p + glyphStream.getInt16();
-							}
-
-							xCoordinates.push(x);
-
-							p = x;
-						}
-						//endregion
-
-						//region Fill Y coordinates
-						p = 0;
-
-						for(const flag of flags)
-						{
-							let y = 0;
-
-							if((flag & SimpleGlyphFlags.Y_SHORT_VECTOR) === SimpleGlyphFlags.Y_SHORT_VECTOR)
-							{
-								y = (glyphStream.getBlock(1))[0];
-
-								if((flag & SimpleGlyphFlags.Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR) === 0)
-									y = (-y);
-
-								y += p;
-							}
-							else
-							{
-								if((flag & SimpleGlyphFlags.Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR) === SimpleGlyphFlags.Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR)
-									y = p;
-								else
-									y = p + glyphStream.getInt16();
-							}
-
-							yCoordinates.push(y);
-
-							p = y;
-						}
-						//endregion
-
-						glyphs.push({
-							glyphStream,
-							numberOfContours,
-							xMin,
-							yMin,
-							xMax,
-							yMax,
-							endPtsOfContours,
-							instructions,
-							flags,
-							xCoordinates,
-							yCoordinates
-						});
-					}
-
-					break;
-				case (numberOfContours < 0):
-					{
-						//region Initial variables
-						let flags = 0;
-						const instructions = [];
-						const components = [];
-						//endregion
-
-						//region Read components
-						do
-						{
-							//region Initial variables
-							const matrix = new Matrix();
-
-							let matchingPoint1 = null;
-							let matchingPoint2 = null;
-							//endregion
-
-							//region Read basic information
-							flags = glyphStream.getUint16();
-							const glyphIndex = glyphStream.getUint16();
-							//endregion
-
-							//region Read translation coordinates
-							switch(true)
-							{
-								case (checkFlag(flags, ComponentGlyphFlags.ARG_1_AND_2_ARE_WORDS) && checkFlag(flags, ComponentGlyphFlags.ARGS_ARE_XY_VALUES)):
-									matrix.e = glyphStream.getInt16();
-									matrix.f = glyphStream.getInt16();
-
-									break;
-								case (!checkFlag(flags, ComponentGlyphFlags.ARG_1_AND_2_ARE_WORDS) && checkFlag(flags, ComponentGlyphFlags.ARGS_ARE_XY_VALUES)):
-									matrix.e = (glyphStream.getBlock(1))[0];
-									matrix.f = (glyphStream.getBlock(1))[0];
-
-									break;
-								case (checkFlag(flags, ComponentGlyphFlags.ARG_1_AND_2_ARE_WORDS) && !checkFlag(flags, ComponentGlyphFlags.ARGS_ARE_XY_VALUES)):
-									matchingPoint1 = glyphStream.getInt16();
-									matchingPoint2 = glyphStream.getInt16();
-
-									break;
-								case (!checkFlag(flags, ComponentGlyphFlags.ARG_1_AND_2_ARE_WORDS) && !checkFlag(flags, ComponentGlyphFlags.ARGS_ARE_XY_VALUES)):
-									matchingPoint1 = (glyphStream.getBlock(1))[0];
-									matchingPoint2 = (glyphStream.getBlock(1))[0];
-
-									break;
-							}
-							//endregion
-
-							//region Read scaling and rotation details
-							switch(true)
-							{
-								case checkFlag(flags, ComponentGlyphFlags.WE_HAVE_A_SCALE):
-									matrix.a = getF2Dot14(glyphStream);
-									matrix.d = matrix.a;
-
-									break;
-								case checkFlag(flags, ComponentGlyphFlags.WE_HAVE_AN_X_AND_Y_SCALE):
-									matrix.a = getF2Dot14(glyphStream);
-									matrix.d = getF2Dot14(glyphStream);
-
-									break;
-								case checkFlag(flags, ComponentGlyphFlags.WE_HAVE_A_TWO_BY_TWO):
-									matrix.a = getF2Dot14(glyphStream);
-									matrix.b = getF2Dot14(glyphStream);
-									matrix.c = getF2Dot14(glyphStream);
-									matrix.d = getF2Dot14(glyphStream);
-
-									break;
-							}
-							//endregion
-
-							const componentParameters = {
-								glyphIndex,
-								flags,
-								matrix
-							};
-
-							if(matchingPoint1 !== null)
-							{
-								componentParameters.matchingPoint1 = matchingPoint1;
-								componentParameters.matchingPoint2 = matchingPoint2;
-							}
-
-							components.push(
-								componentParameters
-							);
-
-						}while(checkFlag(flags, ComponentGlyphFlags.MORE_COMPONENTS));
-						//endregion
-
-						//region Read instructions
-						if(checkFlag(flags, ComponentGlyphFlags.WE_HAVE_INSTRUCTIONS))
-						{
-							const numInstr = glyphStream.getUint16();
-
-							for(let i = 0; i < numInstr; i++)
-							{
-								const instruction = (glyphStream.getBlock(1))[0];
-								instructions.push(instruction);
-							}
-						}
-						//endregion
-
-						glyphs.push({
-							glyphStream,
-							numberOfContours,
-							xMin,
-							yMin,
-							xMax,
-							yMax,
-							components,
-							instructions
-						});
-					}
-
-					break;
-			}
-		}
-		//endregion
-
-		return new GLYF({
-			glyphs
-		});
+		return new GLYF({ glyphs: Array.from(streams, element => Glyph.new(element)) });
 	}
 	//**********************************************************************************
 }

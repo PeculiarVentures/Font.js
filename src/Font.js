@@ -33,32 +33,22 @@ export class ScalerTypes
 }
 //**************************************************************************************
 /**
- * Got core of the function from https://github.com/opentypejs/opentype.js/blob/master/src/tables/sfnt.js
+ * Calculating checksum for most tables
  *
  * @param {ArrayBuffer} buffer
- *
  * @returns {number}
  */
 function calculateCheckSum(buffer)
 {
-	const bytes = Array.from(new Uint8Array(buffer));
+	const paddedView = new Uint8Array([...new Uint8Array(buffer), ...new Uint8Array(4 - (buffer.byteLength % 4))]);
+	const dataView = new DataView(paddedView.buffer);
 
-	while(bytes.length % 4 !== 0)
-		bytes.push(0);
+	let sum = new Uint32Array([0]);
 
-	let sum = 0;
+	for(let i = 0; i < dataView.byteLength; i += 4)
+		sum[0] += dataView.getUint32(i);
 
-	for(let i = 0; i < bytes.length; i += 4)
-	{
-		sum += (bytes[i] << 24) +
-			(bytes[i + 1] << 16) +
-			(bytes[i + 2] << 8) +
-			(bytes[i + 3]);
-	}
-
-	sum %= Math.pow(2, 32);
-
-	return sum;
+	return sum[0];
 }
 //**************************************************************************************
 export class Font extends BaseClass
@@ -79,7 +69,7 @@ export class Font extends BaseClass
 	//**********************************************************************************
 	/**
 	 * Convert current object to SeqStream data
-	 * @param {!SeqStream} stream
+	 * @param {!SeqStream} fontStream
 	 * @returns {boolean} Result of the function
 	 */
 	toStream(stream)
@@ -104,7 +94,7 @@ export class Font extends BaseClass
 		//endregion
 
 		//region Encode tables data
-		const encodeTable = table =>
+		const encodeTable = (table) =>
 		{
 			//region Common encoding
 			const tableStream = new SeqStream();
@@ -118,74 +108,73 @@ export class Font extends BaseClass
 			switch(table.constructor.tag)
 			{
 				case Tables.GLYF.tag:
+				{
+					//region Calculate "indexToLocFormat" value
+					let indexToLocFormat = 0;
+
+					for(const element of table.loca)
 					{
-						//region Calculate "indexToLocFormat" value
-						let indexToLocFormat = 0;
-
-						for(const element of table.loca)
+						if((element > 0xFFFF) || (element % 2))
 						{
-							if((element > 0xFFFF) || (element % 2))
-							{
-								indexToLocFormat = 1;
-								break;
-							}
+							indexToLocFormat = 1;
+							break;
 						}
-						//endregion
-
-						//region Initialize "loca" table
-						let loca = this.tables.get(Tables.LOCA.tag);
-						if(typeof loca === "undefined")
-							loca = new Tables.LOCA();
-
-						loca.offsets = table.loca;
-						loca.indexToLocFormat = indexToLocFormat;
-
-						this.tables.set(Tables.LOCA.tag, loca);
-
-						encodeTable(loca);
-						//endregion
-
-						//region Initialize "maxp" table
-						let maxp = this.tables.get(Tables.MAXP.tag);
-						if(typeof maxp === "undefined")
-							maxp = new Tables.MAXP();
-
-						// noinspection JSUnresolvedVariable
-						maxp.numGlyphs = table.glyphs.length;
-
-						this.tables.set(Tables.MAXP.tag, maxp);
-
-						encodeTable(maxp);
-						//endregion
 					}
+					//endregion
+
+					//region Initialize "loca" table
+					let loca = this.tables.get(Tables.LOCA.tag);
+					if(typeof loca === "undefined")
+						loca = new Tables.LOCA();
+
+					loca.offsets = table.loca;
+					loca.indexToLocFormat = indexToLocFormat;
+
+					this.tables.set(Tables.LOCA.tag, loca);
+
+					encodeTable(loca);
+					//endregion
+
+					//region Initialize "maxp" table
+					let maxp = this.tables.get(Tables.MAXP.tag);
+					if(typeof maxp === "undefined")
+						maxp = new Tables.MAXP();
+
+					maxp.numGlyphs = table.glyphs.length;
+
+					this.tables.set(Tables.MAXP.tag, maxp);
+
+					encodeTable(maxp);
+					//endregion
+				}
 
 					break;
 				case Tables.LOCA.tag:
-					{
-						//region Initialize "maxp" table
-						let maxp = this.tables.get(Tables.MAXP.tag);
-						if(typeof maxp === "undefined")
-							maxp = new Tables.MAXP();
+				{
+					//region Initialize "maxp" table
+					let maxp = this.tables.get(Tables.MAXP.tag);
+					if(typeof maxp === "undefined")
+						maxp = new Tables.MAXP();
 
-						maxp.numGlyphs = (table.offsets.length - 1);
+					maxp.numGlyphs = (table.offsets.length - 1);
 
-						this.tables.set(Tables.MAXP.tag, maxp);
+					this.tables.set(Tables.MAXP.tag, maxp);
 
-						encodeTable(maxp);
-						//endregion
+					encodeTable(maxp);
+					//endregion
 
-						//region Initialize "head" table
-						let head = this.tables.get(Tables.HEAD.tag);
-						if(typeof head === "undefined")
-							head = new Tables.HEAD();
+					//region Initialize "head" table
+					let head = this.tables.get(Tables.HEAD.tag);
+					if(typeof head === "undefined")
+						head = new Tables.HEAD();
 
-						head.indexToLocFormat = table.indexToLocFormat;
+					head.indexToLocFormat = table.indexToLocFormat;
 
-						this.tables.set(Tables.HEAD.tag, head);
+					this.tables.set(Tables.HEAD.tag, head);
 
-						encodeTable(head);
-						//endregion
-					}
+					encodeTable(head);
+					//endregion
+				}
 
 					break;
 				default:
@@ -297,87 +286,87 @@ export class Font extends BaseClass
 			switch(tag)
 			{
 				case Tables.CMAP.tag:
+				{
+					let result = tables.get(Tables.CMAP.tag);
+					if (typeof result === "undefined")
 					{
-						let result = tables.get(Tables.CMAP.tag);
-						if (typeof result === "undefined")
-						{
-							result = Tables.CMAP.fromStream(tableStream);
-							tables.set(Tables.CMAP.tag, result);
-						}
-
-						return result;
+						result = Tables.CMAP.fromStream(tableStream);
+						tables.set(Tables.CMAP.tag, result);
 					}
+
+					return result;
+				}
 				case Tables.HEAD.tag:
+				{
+					let result = tables.get(Tables.HEAD.tag);
+					if (typeof result === "undefined")
 					{
-						let result = tables.get(Tables.HEAD.tag);
-						if (typeof result === "undefined")
-						{
-							result = Tables.HEAD.fromStream(tableStream);
-							tables.set(Tables.HEAD.tag, result);
-						}
-
-						return result;
+						result = Tables.HEAD.fromStream(tableStream);
+						tables.set(Tables.HEAD.tag, result);
 					}
+
+					return result;
+				}
 				case Tables.HHEA.tag:
+				{
+					let result = tables.get(Tables.HHEA.tag);
+					if (typeof result === "undefined")
 					{
-						let result = tables.get(Tables.HHEA.tag);
-						if (typeof result === "undefined")
-						{
-							result = Tables.HHEA.fromStream(tableStream);
-							tables.set(Tables.HHEA.tag, result);
-						}
-
-						return result;
+						result = Tables.HHEA.fromStream(tableStream);
+						tables.set(Tables.HHEA.tag, result);
 					}
+
+					return result;
+				}
 				case Tables.HMTX.tag:
+				{
+					let result = tables.get(Tables.HMTX.tag);
+					if (typeof result === "undefined")
 					{
-						let result = tables.get(Tables.HMTX.tag);
-						if (typeof result === "undefined")
-						{
-							let hhea = parseTable(Tables.HHEA.tag);
-							if(hhea === null)
-								throw new Error("Something went wrong while parsing 'hhea' table");
+						let hhea = parseTable(Tables.HHEA.tag);
+						if(hhea === null)
+							throw new Error("Something went wrong while parsing 'hhea' table");
 
-							const maxp = parseTable(Tables.MAXP.tag);
-							if(maxp === null)
-								throw new Error("Something went wrong while parsing 'maxp' table");
+						const maxp = parseTable(Tables.MAXP.tag);
+						if(maxp === null)
+							throw new Error("Something went wrong while parsing 'maxp' table");
 
-							result = Tables.HMTX.fromStream(maxp.numGlyphs, hhea.numOfLongHorMetrics, tableStream);
-							tables.set(Tables.HMTX.tag, result);
-						}
-
-						return result;
+						result = Tables.HMTX.fromStream(maxp.numGlyphs, hhea.numOfLongHorMetrics, tableStream);
+						tables.set(Tables.HMTX.tag, result);
 					}
+
+					return result;
+				}
 				case Tables.MAXP.tag:
+				{
+					let result = tables.get(Tables.MAXP.tag);
+					if (typeof result === "undefined")
 					{
-						let result = tables.get(Tables.MAXP.tag);
-						if (typeof result === "undefined")
-						{
-							result = Tables.MAXP.fromStream(tableStream);
-							tables.set(Tables.MAXP.tag, result);
-						}
-
-						return result;
+						result = Tables.MAXP.fromStream(tableStream);
+						tables.set(Tables.MAXP.tag, result);
 					}
+
+					return result;
+				}
 				case Tables.LOCA.tag:
+				{
+					let result = tables.get(Tables.LOCA.tag);
+					if (typeof result === "undefined")
 					{
-						let result = tables.get(Tables.LOCA.tag);
-						if (typeof result === "undefined")
-						{
-							const maxp = parseTable(Tables.MAXP.tag);
-							if(maxp === null)
-								throw new Error("Something went wrong while parsing 'maxp' table");
+						const maxp = parseTable(Tables.MAXP.tag);
+						if(maxp === null)
+							throw new Error("Something went wrong while parsing 'maxp' table");
 
-							const head = parseTable(Tables.HEAD.tag);
-							if(head === null)
-								throw new Error("Something went wrong while parsing 'head' table");
+						const head = parseTable(Tables.HEAD.tag);
+						if(head === null)
+							throw new Error("Something went wrong while parsing 'head' table");
 
-							result = Tables.LOCA.fromStream(head.indexToLocFormat, maxp.numGlyphs, tableStream);
-							tables.set(Tables.LOCA.tag, result);
-						}
-
-						return result;
+						result = Tables.LOCA.fromStream(head.indexToLocFormat, maxp.numGlyphs, tableStream);
+						tables.set(Tables.LOCA.tag, result);
 					}
+
+					return result;
+				}
 				case Tables.GLYF.tag:
 				{
 					let result = tables.get(Tables.GLYF.tag);
@@ -398,86 +387,86 @@ export class Font extends BaseClass
 					return result;
 				}
 				case Tables.NAME.tag:
+				{
+					let result = tables.get(Tables.NAME.tag);
+					if (typeof result === "undefined")
 					{
-						let result = tables.get(Tables.NAME.tag);
-						if (typeof result === "undefined")
-						{
-							result = Tables.NAME.fromStream(tableStream);
-							tables.set(Tables.NAME.tag, result);
-						}
-
-						return result;
+						result = Tables.NAME.fromStream(tableStream);
+						tables.set(Tables.NAME.tag, result);
 					}
+
+					return result;
+				}
 				case Tables.POST.tag:
+				{
+					let result = tables.get(Tables.POST.tag);
+					if (typeof result === "undefined")
 					{
-						let result = tables.get(Tables.POST.tag);
-						if (typeof result === "undefined")
-						{
-							result = Tables.POST.fromStream(tableStream);
-							tables.set(Tables.POST.tag, result);
-						}
-
-						return result;
+						result = Tables.POST.fromStream(tableStream);
+						tables.set(Tables.POST.tag, result);
 					}
+
+					return result;
+				}
 				case Tables.OS2.tag:
+				{
+					let result = tables.get(Tables.OS2.tag);
+					if (typeof result === "undefined")
 					{
-						let result = tables.get(Tables.OS2.tag);
-						if (typeof result === "undefined")
-						{
-							result = Tables.OS2.fromStream(tableStream);
-							tables.set(Tables.OS2.tag, result);
-						}
-
-						return result;
+						result = Tables.OS2.fromStream(tableStream);
+						tables.set(Tables.OS2.tag, result);
 					}
+
+					return result;
+				}
 				case Tables.CVT.tag:
+				{
+					let result = tables.get(Tables.CVT.tag);
+					if (typeof result === "undefined")
 					{
-						let result = tables.get(Tables.CVT.tag);
-						if (typeof result === "undefined")
-						{
-							result = Tables.CVT.fromStream(tableStream);
-							tables.set(Tables.CVT.tag, result);
-						}
-
-						return result;
+						result = Tables.CVT.fromStream(tableStream);
+						tables.set(Tables.CVT.tag, result);
 					}
+
+					return result;
+				}
 				case Tables.FPGM.tag:
+				{
+					let result = tables.get(Tables.FPGM.tag);
+					if (typeof result === "undefined")
 					{
-						let result = tables.get(Tables.FPGM.tag);
-						if (typeof result === "undefined")
-						{
-							result = Tables.FPGM.fromStream(tableStream);
-							tables.set(Tables.FPGM.tag, result);
-						}
-
-						return result;
+						result = Tables.FPGM.fromStream(tableStream);
+						tables.set(Tables.FPGM.tag, result);
 					}
+
+					return result;
+				}
 				case Tables.HDMX.tag:
+				{
+					let result = tables.get(Tables.HDMX.tag);
+					if (typeof result === "undefined")
 					{
-						let result = tables.get(Tables.HDMX.tag);
-						if (typeof result === "undefined")
-						{
-							const maxp = parseTable(Tables.MAXP.tag);
-							if(maxp === null)
-								throw new Error("Something went wrong while parsing 'maxp' table");
+						const maxp = parseTable(Tables.MAXP.tag);
+						if(maxp === null)
+							throw new Error("Something went wrong while parsing 'maxp' table");
 
-							result = Tables.HDMX.fromStream(maxp.numGlyphs, tableStream);
-							tables.set(Tables.HDMX.tag, result);
-						}
-
-						return result;
+						result = Tables.HDMX.fromStream(maxp.numGlyphs, tableStream);
+						tables.set(Tables.HDMX.tag, result);
 					}
+
+					return result;
+				}
 				case Tables.PREP.tag:
+				{
+					let result = tables.get(Tables.PREP.tag);
+					if (typeof result === "undefined")
 					{
-						let result = tables.get(Tables.PREP.tag);
-						if (typeof result === "undefined")
-						{
-							result = Tables.PREP.fromStream(tableStream);
-							tables.set(Tables.PREP.tag, result);
-						}
-
-						return result;
+						result = Tables.PREP.fromStream(tableStream);
+						tables.set(Tables.PREP.tag, result);
 					}
+
+					return result;
+				}
 				case 0x43464632:
 					break;
 				default:
@@ -499,6 +488,24 @@ export class Font extends BaseClass
 			warnings,
 			tables
 		});
+	}
+	//**********************************************************************************
+	static makeTTF(parameters = {})
+	{
+		//region Check input parameters
+		if(("glyphs" in parameters) === false)
+			throw new Error("Missing mandatory parameter glyphs");
+
+		let tables = new Map();
+		if("tables" in parameters)
+			tables = parameters.tables;
+		//endregion
+
+		//region Get major metrics from array of glyphs
+		for(const glyph in parameters.glyphs)
+		{
+		}
+		//endregion
 	}
 	//**********************************************************************************
 	/**
@@ -557,7 +564,7 @@ export class Font extends BaseClass
 			}
 		}
 		//endregion
-		
+
 		return result;
 	}
 	//**********************************************************************************
