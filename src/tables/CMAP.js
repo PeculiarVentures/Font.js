@@ -131,7 +131,8 @@ export class CMAP extends BaseClass
 	//**********************************************************************************
 	gid(code, platformID = 3, platformSpecificID = 1)
 	{
-		let result = null;
+		// Replace absent chars via GID = 0 (as it is required by standard)
+		let result = 0;
 		
 		for(const subTable of this.subTables)
 		{
@@ -142,6 +143,22 @@ export class CMAP extends BaseClass
 			}
 		}
 		
+		return result;
+	}
+	//**********************************************************************************
+	code(gid, platformID = 3, platformSpecificID = 1)
+	{
+		let result = [];
+
+		for(const subTable of this.subTables)
+		{
+			if((subTable.platformID === platformID) && (subTable.platformSpecificID === platformSpecificID))
+			{
+				result = subTable.code(gid);
+				break;
+			}
+		}
+
 		return result;
 	}
 	//**********************************************************************************
@@ -328,9 +345,9 @@ export class Format4 extends CMAPSubTable
 		const language = stream.getUint16();
 		const segCountX2 = stream.getUint16();
 		const segCount = segCountX2 >> 1;
-		stream.getUint16(); // searchRange
-		stream.getUint16(); // entrySelector
-		stream.getUint16(); // rangeShift
+		const searchRange = stream.getUint16();
+		const entrySelector = stream.getUint16();
+		const rangeShift = stream.getUint16();
 		//endregion
 
 		//region Initialize "endCode" array
@@ -343,7 +360,7 @@ export class Format4 extends CMAPSubTable
 		}
 		//endregion
 
-		stream.getUint16(); // reservedPad
+		const reservedPad = stream.getUint16();
 
 		//region Initialize "startCode" array
 		const startCode = [];
@@ -407,7 +424,6 @@ export class Format4 extends CMAPSubTable
 
 				if(idRangeOffset[i])
 				{
-					// noinspection JSObjectNullOrUndefined,JSUnresolvedFunction
 					const value = rangeStream.getUint16();
 					glyphIndex = (value + idDelta[i]) & 0xFFFF;
 				}
@@ -437,11 +453,12 @@ export class Format4 extends CMAPSubTable
 	 * Return GID by character code
 	 *
 	 * @param {number} code Character code
-	 * @return {?number}
+	 * @return {number|null}
 	 */
 	gid(code)
 	{
-		let result = null;
+		// Replace absent chars via GID = 0 (as it is required by standard)
+		let result = 0;
 
 		for(const segment of this.segments)
 		{
@@ -450,27 +467,27 @@ export class Format4 extends CMAPSubTable
 				break;
 		}
 
-		return (result || null);
+		return (result || 0);
 	}
 	//**********************************************************************************
 	/**
 	 * Return character code by GID
 	 *
 	 * @param {number} gid Glyph index (GID)
-	 * @return {number|null}
+	 * @return {Array}
 	 */
 	code(gid)
 	{
-		let result = null;
+		let result = [];
 
 		for(const segment of this.segments)
 		{
-			result = segment.gidToCode.get(gid);
-			if(typeof result !== "undefined")
-				break;
+			const segmentResult = segment.gidToCode.get(gid);
+			if(typeof segmentResult !== "undefined")
+				result.push(segmentResult);
 		}
 
-		return (result || null);
+		return result;
 	}
 	//**********************************************************************************
 }
@@ -545,7 +562,7 @@ export class Format6 extends CMAPSubTable
 	 */
 	gid(code)
 	{
-		let result = null;
+		let result = 0;
 
 		for(let i = 0; i < this.glyphIndexArray.length; i++)
 		{

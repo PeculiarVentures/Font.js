@@ -1,5 +1,6 @@
-import { SeqStream } from "bytestreamjs";
+mport { SeqStream } from "bytestreamjs";
 import { BaseClass } from "./BaseClass.js";
+import { unicodePointsToCodePoints } from "./common.js";
 import * as Tables from "./Tables.js";
 //**************************************************************************************
 export class ScalerTypes
@@ -33,32 +34,22 @@ export class ScalerTypes
 }
 //**************************************************************************************
 /**
- * Got core of the function from https://github.com/opentypejs/opentype.js/blob/master/src/tables/sfnt.js
+ * Calculating checksum for most tables
  *
  * @param {ArrayBuffer} buffer
- *
  * @returns {number}
  */
 function calculateCheckSum(buffer)
 {
-	const bytes = Array.from(new Uint8Array(buffer));
+	const paddedView = new Uint8Array([...new Uint8Array(buffer), ...new Uint8Array(4 - (buffer.byteLength % 4))]);
+	const dataView = new DataView(paddedView.buffer);
 
-	while(bytes.length % 4 !== 0)
-		bytes.push(0);
+	let sum = new Uint32Array([0]);
 
-	let sum = 0;
+	for(let i = 0; i < dataView.byteLength; i += 4)
+		sum[0] += dataView.getUint32(i);
 
-	for(let i = 0; i < bytes.length; i += 4)
-	{
-		sum += (bytes[i] << 24) +
-			(bytes[i + 1] << 16) +
-			(bytes[i + 2] << 8) +
-			(bytes[i + 3]);
-	}
-
-	sum %= Math.pow(2, 32);
-
-	return sum;
+	return sum[0];
 }
 //**************************************************************************************
 export class Font extends BaseClass
@@ -79,7 +70,7 @@ export class Font extends BaseClass
 	//**********************************************************************************
 	/**
 	 * Convert current object to SeqStream data
-	 * @param {!SeqStream} stream
+	 * @param {!SeqStream} fontStream
 	 * @returns {boolean} Result of the function
 	 */
 	toStream(stream)
@@ -104,7 +95,7 @@ export class Font extends BaseClass
 		//endregion
 
 		//region Encode tables data
-		const encodeTable = table =>
+		const encodeTable = (table) =>
 		{
 			//region Common encoding
 			const tableStream = new SeqStream();
@@ -150,7 +141,6 @@ export class Font extends BaseClass
 						if(typeof maxp === "undefined")
 							maxp = new Tables.MAXP();
 
-						// noinspection JSUnresolvedVariable
 						maxp.numGlyphs = table.glyphs.length;
 
 						this.tables.set(Tables.MAXP.tag, maxp);
@@ -258,16 +248,22 @@ export class Font extends BaseClass
 	 */
 	static fromStream(stream)
 	{
+		//region Initial variables
+		const warnings = [];
+		let headCheckSum = 0;
+
+		const tableStreams = new Map();
+		//endregion
+
+		//region Get head values for entire font
 		const scalerType = stream.getUint32();
 		const numTables = stream.getUint16();
 		const searchRange = stream.getUint16();
 		const entrySelector = stream.getUint16();
 		const rangeShift = stream.getUint16();
+		//endregion
 
-		const warnings = [];
-
-		const tableStreams = new Map();
-
+		//region Get head values for each table
 		for(let i = 0; i < numTables; i++)
 		{
 			const tag = stream.getUint32();
@@ -276,14 +272,21 @@ export class Font extends BaseClass
 			const length = stream.getUint32();
 
 			//region Check "checkSum" value
-			const tableStream = new SeqStream({stream: stream.stream.slice(offset, offset + length)});
+			const tableStream = new SeqStream({ stream: stream.stream.slice(offset, offset + length) });
 
 			if(calculateCheckSum(tableStream.buffer) !== checkSum)
-				warnings.push(`Invalid checkSum for ${tag}`);
+			{
+				// In case of HEAD there is more specialized procedure for checkSum calculation
+				if(tag === Tables.HEAD.tag)
+					headCheckSum = checkSum;
+				else
+					warnings.push(`Invalid checkSum for ${tag}`);
+			}
 			//endregion
 
 			tableStreams.set(tag, tableStream);
 		}
+		//endregion
 
 		//region Parse streams for all tables
 		const tables = new Map();
@@ -312,8 +315,17 @@ export class Font extends BaseClass
 						let result = tables.get(Tables.HEAD.tag);
 						if (typeof result === "undefined")
 						{
+							//region Calculate checkSum for the HEAD table
+							const headView = new DataView(tableStream.buffer);
+							headView.setUint32(8, 0);
+
+							if(calculateCheckSum(headView.buffer) !== headCheckSum)
+								warnings.push(`Invalid checkSum for ${Tables.HEAD.tag} (HEAD)`);
+							//endregion
+
 							result = Tables.HEAD.fromStream(tableStream);
 							tables.set(Tables.HEAD.tag, result);
+
 						}
 
 						return result;
@@ -501,6 +513,178 @@ export class Font extends BaseClass
 		});
 	}
 	//**********************************************************************************
+	get numGlyphs()
+	{
+		//region Get MAXP table reference
+		const maxp = this.tables.get(Tables.MAXP.tag);
+		if(typeof maxp === "undefined")
+			throw new Error("No MAXP table in the font");
+		//endregion
+
+		return maxp.numGlyphs;
+	}
+	//**********************************************************************************
+	get glyphs()
+	{
+		//region Return pre-calculated values in exist
+		if("_glyphs" in this)
+			return this._glyphs;
+		//endregion
+
+		//region Get GLYF table reference
+		const glyf = this.tables.get(Tables.GLYF.tag);
+		if(typeof glyf === "undefined")
+			throw new Error("No GLYF table in the font");
+
+		this._glyphs = glyf.glyphs.slice();
+		//endregion
+
+		//region Fill array of glyphs with combined values
+		//region Get information about horizontal metrics
+		const hmtx = this.tables.get(Tables.HMTX.tag);
+		if(typeof hmtx === "undefined")
+			throw new Error("No HMTX table in the font");
+
+		let leastAdvanceWidth = 0;
+
+		for(let i = 0; i < this._glyphs.length; i++)
+		{
+			this._glyphs[i].index = i;
+
+			if(i >= hmtx.hMetrics.length)
+			{
+				this._glyphs[i].hAdvanceWidth = leastAdvanceWidth;
+				this._glyphs[i].leftSideBearing = hmtx.leftSideBearings[0];
+			}
+			else
+			{
+				leastAdvanceWidth = hmtx.hMetrics[i].advanceWidth;
+
+				this._glyphs[i].hAdvanceWidth = leastAdvanceWidth;
+				this._glyphs[i].leftSideBearing = hmtx.hMetrics[i].leftSideBearing;
+			}
+		}
+		//endregion
+
+		//region Get information about Unicode codes
+		const cmap = this.tables.get(Tables.CMAP.tag);
+		if(typeof cmap !== "undefined")
+		{
+			for(let i = 0; i < this._glyphs.length; i++)
+				this._glyphs[i].unicodes = cmap.code(i).slice();
+		}
+		//endregion
+		//endregion
+
+		return this._glyphs;
+	}
+	//**********************************************************************************
+	get unitsPerEm()
+	{
+		//region Get HEAD table reference
+		const head = this.tables.get(Tables.HEAD.tag);
+		if(typeof head === "undefined")
+			throw new Error("No HEAD table in the font");
+		//endregion
+
+		return head.unitsPerEm;
+	}
+	//**********************************************************************************
+	get bbox()
+	{
+		//region Initial variables
+		const glyphs = this.glyphs;
+		const unitsPerEm = this.unitsPerEm;
+
+		const xMin = [];
+		const yMin = [];
+		const xMax = [];
+		const yMax = [];
+		//endregion
+
+		//region Fill necessary arrays
+		for(const glyph of glyphs)
+		{
+			xMin.push(glyph.xMin);
+			yMin.push(glyph.yMin);
+			xMax.push(glyph.xMax);
+			yMax.push(glyph.yMax);
+		}
+		//endregion
+
+		return [
+			Math.min.apply(null, xMin) / unitsPerEm,
+			Math.min.apply(null, yMin) / unitsPerEm,
+			Math.max.apply(null, xMax) / unitsPerEm,
+			Math.max.apply(null, yMax) / unitsPerEm,
+		];
+	}
+	//**********************************************************************************
+	get italicAngle()
+	{
+		//region Get POST table reference
+		const post = this.tables.get(Tables.POST.tag);
+		if(typeof post === "undefined")
+			throw new Error("No POST table in the font");
+		//endregion
+
+		return post.italicAngle;
+	}
+	//**********************************************************************************
+	get fontFamily()
+	{
+		//region Get NAME table reference
+		const name = this.tables.get(Tables.NAME.tag);
+		if(typeof name === "undefined")
+			return null;
+		//endregion
+		
+		for(const nameRecord of name.nameRecords)
+		{
+			if((nameRecord.nameID === 1) && (nameRecord.platformID === 0))
+				return String.fromCodePoint(...unicodePointsToCodePoints(nameRecord.value, true, true, false));
+		}
+
+		return null;
+	}
+	//**********************************************************************************
+	get postScriptName()
+	{
+		//region Get NAME table reference
+		const name = this.tables.get(Tables.NAME.tag);
+		if(typeof name === "undefined")
+			return null;
+		//endregion
+
+		for(const nameRecord of name.nameRecords)
+		{
+			if((nameRecord.nameID === 6) && (nameRecord.platformID === 0))
+				return String.fromCodePoint(...unicodePointsToCodePoints(nameRecord.value, true, true, false));
+		}
+
+		return null;
+	}
+	//**********************************************************************************
+	static makeTTF(parameters = {})
+	{
+		//region Check input parameters
+		if(("glyphs" in parameters) === false)
+			throw new Error("Missing mandatory parameter glyphs");
+
+		let tables = new Map();
+		if("tables" in parameters)
+			tables = parameters.tables;
+		//endregion
+
+		//region Get major metrics from array of glyphs
+		for(const glyph in parameters.glyphs)
+		{
+			// glyph -> hmtx (vmtx) -> hhea (vhea) -> cmap -> loca -> maxp
+			// "name" is a side table, "post" is mostly template
+		}
+		//endregion
+	}
+	//**********************************************************************************
 	/**
 	 * Return array GID (as string hexadecimal representation) for particular string
 	 *
@@ -513,6 +697,28 @@ export class Font extends BaseClass
 	{
 		//region Initial variables
 		const result = [];
+
+		const numGlyphs = this.numGlyphs;
+		//endregion
+
+		//region Find correct number of bytes for GID codes
+		let bytes = "00";
+
+		switch(true)
+		{
+			case (numGlyphs > 0xFF):
+				bytes = "0000";
+				break;
+			case (numGlyphs > 0xFFFF):
+				bytes = "000000";
+				break;
+			case (numGlyphs > 0xFFFFFF):
+				bytes = "00000000";
+				break;
+			case (numGlyphs > 0xFFFFFFFF):
+				bytes = "0000000000";
+				break;
+		}
 		//endregion
 
 		//region Get CMAP table reference
@@ -521,38 +727,14 @@ export class Font extends BaseClass
 			throw new Error("No CMAP table in the font");
 		//endregion
 
-		//region Get MAXP table reference
-		const maxp = this.tables.get(Tables.MAXP.tag);
-		if(typeof maxp === "undefined")
-			throw new Error("No MAXP table in the font");
-		//endregion
-
-		//region Find correct number of bytes for GID codes
-		let bytes = "00";
-
-		switch(true)
-		{
-			case (maxp.numGlyphs > 0xFF):
-				bytes = "0000";
-				break;
-			case (maxp.numGlyphs > 0xFFFF):
-				bytes = "000000";
-				break;
-			case (maxp.numGlyphs > 0xFFFFFF):
-				bytes = "00000000";
-				break;
-			case (maxp.numGlyphs > 0xFFFFFFFF):
-				bytes = "0000000000";
-				break;
-		}
-		//endregion
-
 		//region Find GIDs for all charpoints
 		for(const char of str)
 		{
 			for(let i = 0; i < char.length; i++)
 			{
-				const gid = cmap.gid(char.codePointAt(i), platformID, platformSpecificID);
+				// Replace absent chars via GID = 0 (as it is required by standard)
+				const gid = cmap.gid(char.codePointAt(i), platformID, platformSpecificID) || 0;
+				
 				result.push(`${bytes}${gid.toString(16).toLocaleUpperCase()}`.slice(-1 * bytes.length));
 			}
 		}

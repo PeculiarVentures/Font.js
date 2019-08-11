@@ -38,7 +38,6 @@ export class Matrix
 	 */
 	static makeTranslation(tx, ty)
 	{
-		// noinspection JSCheckFunctionSignatures
 		return new Matrix({
 			e: tx,
 			f: ty
@@ -258,7 +257,7 @@ export class Matrix
 	set j(value)
 	{
 		//throw new Error("Cannot set a value for PDF matrix index J");
-		this._array[2] = value;
+		this._array[2] = value
 	}
 	//**********************************************************************************
 	/**

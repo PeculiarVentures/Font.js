@@ -1,3 +1,4 @@
+import { SeqStream } from "bytestreamjs";
 import { BaseClass } from "../BaseClass.js";
 //**************************************************************************************
 export class LOCA extends BaseClass

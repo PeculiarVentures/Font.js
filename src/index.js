@@ -3,14 +3,26 @@ import {
 	appendF2Dot14,
 	getF2Dot14,
 	getLongDateTime,
-	appendLongDateTime
+	appendLongDateTime,
+	stringToCodePoints,
+	stringToUnicode,
+	stringToUnicodeHex,
+	unicodePointsToCodePoints,
+	unicodeToString,
+	unicodeHexToString
 } from "./common.js";
 export {
 	checkFlag,
 	appendF2Dot14,
 	getF2Dot14,
 	getLongDateTime,
-	appendLongDateTime
+	appendLongDateTime,
+	stringToCodePoints,
+	stringToUnicode,
+	stringToUnicodeHex,
+	unicodePointsToCodePoints,
+	unicodeToString,
+	unicodeHexToString
 };
 import {
 	Matrix

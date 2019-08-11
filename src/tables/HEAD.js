@@ -1,5 +1,6 @@
+import { SeqStream } from "bytestreamjs";
 import { BaseClass } from "../BaseClass.js";
-import { getLongDateTime, appendLongDateTime } from "../common.js";
+import { getLongDateTime, appendLongDateTime, getFixed } from "../common.js";
 //**************************************************************************************
 export class HEAD extends BaseClass
 {

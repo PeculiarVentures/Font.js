@@ -1,3 +1,4 @@
+import { SeqStream } from "bytestreamjs";
 import { BaseClass } from "../BaseClass.js";
 //**************************************************************************************
 export class HHEA extends BaseClass
@@ -73,10 +74,10 @@ export class HHEA extends BaseClass
 		const caretSlopeRise = stream.getInt16();
 		const caretSlopeRun = stream.getInt16();
 		const caretOffset = stream.getInt16();
-		stream.getInt16(); // reserved1
-		stream.getInt16(); // reserved2
-		stream.getInt16(); // reserved3
-		stream.getInt16(); // reserved4
+		const reserved1 = stream.getInt16();
+		const reserved2 = stream.getInt16();
+		const reserved3 = stream.getInt16();
+		const reserved4 = stream.getInt16();
 		const metricDataFormat = stream.getInt16();
 		const numOfLongHorMetrics = stream.getUint16();
 
