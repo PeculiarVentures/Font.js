@@ -1,5 +1,6 @@
-import { SeqStream } from "bytestreamjs";
+import { SeqStream } from "../../bytestreamjs/bytestream.js";
 import { BaseClass } from "../BaseClass.js";
+import { Glyph, SimpleGlyph, CompoundGlyph } from "./GLYF.js";
 //**************************************************************************************
 export class MAXP extends BaseClass
 {
@@ -8,7 +9,8 @@ export class MAXP extends BaseClass
 	{
 		super();
 
-		this.version = parameters.version || 0x00010000;
+		//this.version = parameters.version || 0x00010000;
+		this.version = parameters.version || 0x00005000;
 		this.numGlyphs = parameters.numGlyphs || 0;
 
 		if(this.version === 0x00010000)
@@ -17,21 +19,116 @@ export class MAXP extends BaseClass
 			this.maxContours = parameters.maxContours || 0;
 			this.maxComponentPoints = parameters.maxComponentPoints || 0;
 			this.maxComponentContours = parameters.maxComponentContours || 0;
-			this.maxZones = parameters.maxZones || 0;
-			this.maxTwilightPoints = parameters.maxTwilightPoints || 0;
-			this.maxStorage = parameters.maxStorage || 0;
-			this.maxFunctionDefs = parameters.maxFunctionDefs || 0;
-			this.maxInstructionDefs = parameters.maxInstructionDefs || 0;
-			this.maxStackElements = parameters.maxStackElements || 0;
+			this.maxZones = parameters.maxZones || 2;
+			this.maxTwilightPoints = parameters.maxTwilightPoints || 100;
+			this.maxStorage = parameters.maxStorage || 256;
+			this.maxFunctionDefs = parameters.maxFunctionDefs || 256;
+			this.maxInstructionDefs = parameters.maxInstructionDefs || 256;
+			this.maxStackElements = parameters.maxStackElements || 3000;
 			this.maxSizeOfInstructions = parameters.maxSizeOfInstructions || 0;
 			this.maxComponentElements = parameters.maxComponentElements || 0;
-			this.maxComponentDepth = parameters.maxComponentDepth || 0;
+			this.maxComponentDepth = parameters.maxComponentDepth || 1;
 		}
+
+		if("glyphs" in parameters)
+			this.fromGlyphs(parameters.glyphs);
 	}
 	//**********************************************************************************
 	static get tag()
 	{
 		return 0x6D617870;
+	}
+	//**********************************************************************************
+	/**
+	 * Construct MAXP table from array of glyphs
+	 *
+	 * @param {Array<Glyph>} glyphs
+	 */
+	fromGlyphs(glyphs)
+	{
+		//region Perform simple initialization
+		this.numGlyphs = glyphs.length;
+
+		if(this.version === 0x00005000)
+			return;
+		//endregion
+
+		const referencedGlyphs = new Map();
+
+		//region Aux function calculatig values for composite glyphs
+		const calculateCompositeGlyph = (glyph, depth) =>
+		{
+			const result = {
+				componentContours: 0,
+				componentPoints: 0,
+				sizeOfInstructions: glyph.instructions.length,
+				componentDepth: depth
+			};
+
+			for(const component of glyph.components)
+			{
+				referencedGlyphs.set(component.glyphIndex, 1);
+
+				const componentGlyph = glyphs[component.glyphIndex];
+
+				switch(true)
+				{
+					case (componentGlyph.constructor.className === SimpleGlyph.className):
+						result.componentContours += componentGlyph.numberOfContours;
+						result.componentPoints += componentGlyph.xCoordinates.length;
+						result.sizeOfInstructions += componentGlyph.instructions.length;
+						result.componentDepth = Math.max(depth + 1, result.componentDepth);
+
+						break;
+					case (componentGlyph.constructor.className === CompoundGlyph.className):
+						{
+							const componentResult = calculateCompositeGlyph(componentGlyph, result.componentDepth + 1);
+
+							result.componentContours += componentResult.componentContours;
+							result.componentPoints += componentResult.componentPoints;
+							result.sizeOfInstructions += componentResult.sizeOfInstructions;
+							result.componentDepth = componentResult.componentDepth;
+						}
+
+						break;
+					default:
+				}
+			}
+
+			return result;
+		}
+		//endregion
+
+		//region Major loop
+		for(const glyph of glyphs)
+		{
+			switch(true)
+			{
+				case (glyph.constructor.className === SimpleGlyph.className):
+					{
+						this.maxPoints = Math.max(this.maxPoints, glyph.xCoordinates.length);
+						this.maxContours = Math.max(this.maxContours, glyph.numberOfContours);
+
+						this.maxSizeOfInstructions = Math.max(this.maxSizeOfInstructions, glyph.instructions.length);
+					}
+					break;
+				case (glyph.constructor.className === CompoundGlyph.className):
+					{
+						const compositeResult = calculateCompositeGlyph(glyph, 1);
+
+						this.maxComponentContours = Math.max(this.maxComponentContours, compositeResult.componentContours);
+						this.maxComponentPoints = Math.max(this.maxComponentPoints, compositeResult.componentPoints);
+						this.maxComponentDepth = Math.max(this.maxComponentDepth, compositeResult.componentDepth);
+
+						this.maxSizeOfInstructions = Math.max(this.maxSizeOfInstructions, compositeResult.sizeOfInstructions);
+					}
+					break;
+				default:
+			}
+		}
+		//endregion
+
+		this.maxComponentElements = referencedGlyphs.size;
 	}
 	//**********************************************************************************
 	/**

@@ -1,4 +1,4 @@
-import { SeqStream } from "bytestreamjs";
+import { SeqStream } from "../../bytestreamjs/bytestream.js";
 import { BaseClass } from "../BaseClass.js";
 import { getLongDateTime, appendLongDateTime, getFixed } from "../common.js";
 //**************************************************************************************
@@ -9,8 +9,8 @@ export class HEAD extends BaseClass
 	{
 		super();
 
-		const now = (new Date()) / 1000 + 2082844800;
-		
+		const now = new Date();
+
 		this.version = parameters.version || 0x00010000;
 		this.fontRevision = parameters.fontRevision || 0x00010000;
 		this.checkSumAdjustment = parameters.checkSumAdjustment || 0;

@@ -9,7 +9,8 @@ import {
 	stringToUnicodeHex,
 	unicodePointsToCodePoints,
 	unicodeToString,
-	unicodeHexToString
+	unicodeHexToString,
+	appendFixed
 } from "./common.js";
 export {
 	checkFlag,
@@ -22,7 +23,8 @@ export {
 	stringToUnicodeHex,
 	unicodePointsToCodePoints,
 	unicodeToString,
-	unicodeHexToString
+	unicodeHexToString,
+	appendFixed
 };
 import {
 	Matrix
@@ -47,4 +49,8 @@ import {
 export {
 	ScalerTypes,
 	Font
+};
+import { FontCollection } from "./FontCollection.js";
+export {
+	FontCollection
 };

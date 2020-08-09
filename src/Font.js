@@ -1,7 +1,9 @@
-import { SeqStream } from "bytestreamjs";
+import { SeqStream } from "../bytestreamjs/bytestream.js";
+import { unicodePointsToCodePoints, stringToCodePoints } from "./common.js";
 import { BaseClass } from "./BaseClass.js";
-import { unicodePointsToCodePoints } from "./common.js";
 import * as Tables from "./Tables.js";
+import { Format0, Format4, Format6 } from "./tables/CMAP.js";
+import { missingGlyph, nullGlyph } from "./tables/GLYF.js";
 //**************************************************************************************
 export class ScalerTypes
 {
@@ -41,13 +43,22 @@ export class ScalerTypes
  */
 function calculateCheckSum(buffer)
 {
-	const paddedView = new Uint8Array([...new Uint8Array(buffer), ...new Uint8Array(4 - (buffer.byteLength % 4))]);
-	const dataView = new DataView(paddedView.buffer);
+	//region Initial variables
+	const bufferView = new Uint8Array(buffer);
 
+	const paddedBuffer = new ArrayBuffer(buffer.byteLength + (4 - (buffer.byteLength % 4)));
+	const paddedView = new Uint8Array(paddedBuffer);
+	paddedView.set(bufferView, 0);
+
+	const dataView = new DataView(paddedBuffer);
+	//endregion
+
+	//region Calculate checksum
 	let sum = new Uint32Array([0]);
 
 	for(let i = 0; i < dataView.byteLength; i += 4)
 		sum[0] += dataView.getUint32(i);
+	//endregion
 
 	return sum[0];
 }
@@ -70,28 +81,18 @@ export class Font extends BaseClass
 	//**********************************************************************************
 	/**
 	 * Convert current object to SeqStream data
-	 * @param {!SeqStream} fontStream
+	 *
+	 * @param {!SeqStream} stream
+	 * @param {!number} streamOffset Necessary only in case of FontCollection encoding
+	 *
 	 * @returns {boolean} Result of the function
 	 */
-	toStream(stream)
+	toStream(stream, streamOffset = 0)
 	{
 		//region Initial variables
 		let tablesData = new Map();
 
-		let offset = 12 + (this.tables.size * 16);
-
 		const fontStream = new SeqStream();
-
-		const log2TablesSize =  Math.floor(Math.log2(this.tables.size));
-		const highestPowerOf2 = Math.pow(2, log2TablesSize);
-		//endregion
-
-		//region Append major "sfnt" header
-		fontStream.appendUint32(this.scalerType);
-		fontStream.appendUint16(this.tables.size);
-		fontStream.appendUint16(highestPowerOf2 << 4);
-		fontStream.appendUint16(log2TablesSize);
-		fontStream.appendUint16((this.tables.size - highestPowerOf2) << 4);
 		//endregion
 
 		//region Encode tables data
@@ -187,6 +188,21 @@ export class Font extends BaseClass
 
 		for(const table of this.tables.values())
 			encodeTable(table);
+		//endregion
+
+		//region Initial variables
+		let offset = 12 + (this.tables.size * 16) + streamOffset;
+
+		const log2TablesSize =  Math.floor(Math.log2(this.tables.size));
+		const highestPowerOf2 = Math.pow(2, log2TablesSize);
+		//endregion
+
+		//region Append major "sfnt" header
+		fontStream.appendUint32(this.scalerType);
+		fontStream.appendUint16(this.tables.size);
+		fontStream.appendUint16(highestPowerOf2 << 4);
+		fontStream.appendUint16(log2TablesSize);
+		fontStream.appendUint16((this.tables.size - highestPowerOf2) << 4);
 		//endregion
 
 		//region Encode tables header
@@ -490,9 +506,74 @@ export class Font extends BaseClass
 
 						return result;
 					}
-				case 0x43464632:
-					break;
+				case Tables.DSIG.tag:
+					{
+						let result = tables.get(Tables.DSIG.tag);
+						if (typeof result === "undefined")
+						{
+							result = Tables.DSIG.fromStream(tableStream);
+							tables.set(Tables.DSIG.tag, result);
+						}
+
+						return result;
+					}
+				case Tables.GASP.tag:
+					{
+						let result = tables.get(Tables.GASP.tag);
+						if (typeof result === "undefined")
+						{
+							result = Tables.GASP.fromStream(tableStream);
+							tables.set(Tables.GASP.tag, result);
+						}
+
+						return result;
+					}
+				case Tables.KERN.tag:
+					{
+						let result = tables.get(Tables.KERN.tag);
+						if (typeof result === "undefined")
+						{
+							result = Tables.KERN.fromStream(tableStream);
+							tables.set(Tables.KERN.tag, result);
+						}
+
+						return result;
+					}
+				case Tables.CFF.tag:
+					{
+						let result = tables.get(Tables.CFF.tag);
+						if (typeof result === "undefined")
+						{
+							result = Tables.CFF.fromStream(tableStream);
+							tables.set(Tables.CFF.tag, result);
+						}
+
+						return result;
+					}
+				case Tables.CFF2.tag:
+					{
+						let result = tables.get(Tables.CFF2.tag);
+						if (typeof result === "undefined")
+						{
+							result = Tables.CFF2.fromStream(tableStream);
+							tables.set(Tables.CFF2.tag, result);
+						}
+
+						return result;
+					}
+				case Tables.GDEF.tag:
+					{
+						let result = tables.get(Tables.GDEF.tag);
+						if (typeof result === "undefined")
+						{
+							result = Tables.GDEF.fromStream(tableStream);
+							tables.set(Tables.GDEF.tag, result);
+						}
+
+						return result;
+					}
 				default:
+					console.log(tag);
 				//throw new Error(`Invalid table tag - ${tag}`);
 			}
 
@@ -631,6 +712,43 @@ export class Font extends BaseClass
 		return post.italicAngle;
 	}
 	//**********************************************************************************
+	/**
+	 * TEST PURPOSE ONLY
+	 *
+	 * @param {string} value
+	 */
+	set fontFamily(value)
+	{
+		//region Initial variables
+		const codePoints = stringToCodePoints(value, true, true, false);
+		//endregion
+
+		//region Get NAME table reference
+		const name = this.tables.get(Tables.NAME.tag);
+		if(typeof name === "undefined")
+			return;
+		//endregion
+
+		//region Firstly find existing value
+		for(const nameRecord of name.nameRecords)
+		{
+			if((nameRecord.nameID === 1) && (nameRecord.platformID === 0))
+			{
+				nameRecord.value = codePoints;
+				return;
+			}
+		}
+		//endregion
+
+		//region If there is not existing value append a new one
+		name.nameRecords.push({
+			nameID: 1,
+			platformID: 0,
+			value: codePoints
+		});
+		//endregion
+	}
+	//**********************************************************************************
 	get fontFamily()
 	{
 		//region Get NAME table reference
@@ -646,6 +764,43 @@ export class Font extends BaseClass
 		}
 
 		return null;
+	}
+	//**********************************************************************************
+	/**
+	 * TEST PURPOSE ONLY
+	 *
+	 * @param {string} value
+	 */
+	set postScriptName(value)
+	{
+		//region Initial variables
+		const codePoints = stringToCodePoints(value, true, true, false);
+		//endregion
+
+		//region Get NAME table reference
+		const name = this.tables.get(Tables.NAME.tag);
+		if(typeof name === "undefined")
+			return;
+		//endregion
+
+		//region Firstly find existing value
+		for(const nameRecord of name.nameRecords)
+		{
+			if((nameRecord.nameID === 6) && (nameRecord.platformID === 0))
+			{
+				nameRecord.value = codePoints;
+				return;
+			}
+		}
+		//endregion
+
+		//region If there is not existing value append a new one
+		name.nameRecords.push({
+			nameID: 6,
+			platformID: 0,
+			value: codePoints
+		});
+		//endregion
 	}
 	//**********************************************************************************
 	get postScriptName()
@@ -665,35 +820,335 @@ export class Font extends BaseClass
 		return null;
 	}
 	//**********************************************************************************
-	static makeTTF(parameters = {})
+	subset(parameters = {})
+	{
+		//region Check input parameters
+		if(("glyphIndexes" in parameters) === false)
+			throw new Error("Missing mandatory parameter glyphIndexes");
+
+		// Object having values for "ascent", "descent" and "lineGap"
+		if(("fontValues" in parameters) === false)
+			throw new Error("Missing mandatory parameter fontValues");
+
+		if(("cmaps" in parameters) === false)
+			throw new Error("Missing mandatory parameter cmaps");
+
+		if(("cmapLanguage" in parameters) === false)
+			throw new Error("Missing mandatory parameter cmapLanguage");
+
+		let tables = new Map();
+		if("tables" in parameters)
+			tables = parameters.tables;
+
+		if(("missingGlyph" in parameters.fontValues) === false)
+			parameters.fontValues.missingGlyph = missingGlyph();
+
+		if(("nullGlyph" in parameters.fontValues) === false)
+			parameters.fontValues.nullGlyph = nullGlyph();
+		//endregion
+
+		//region Make a glyphs array
+		const glyphTable = this.tables.get(Tables.GLYF.tag);
+		if(typeof glyphTable === "undefined")
+			throw new Error("Initialize main font object first");
+
+		//region Append mandatory "missing glyph" and "null glyph"
+		// https://developer.apple.com/fonts/TrueType-Reference-Manual/RM07/appendixB.html
+		let glyphs = [
+			parameters.fontValues.missingGlyph,
+			parameters.fontValues.nullGlyph,
+		];
+		//endregion
+
+		for(const index of parameters.glyphIndexes)
+		{
+			const glyph = glyphTable.glyphs[index];
+			if(typeof glyph === "undefined")
+				throw new Error(`Incorrect glyph index: ${index}`);
+
+			switch(glyph.constructor.className)
+			{
+				case Tables.SimpleGlyph.className:
+				case Tables.EmptyGlyph.className:
+					glyphs.push(glyph);
+					break;
+				case Tables.CompoundGlyph.className:
+					{
+						for(let i = 0; i < glyph.components.length; i++)
+						{
+							const componentGlyph = glyphTable.glyphs[glyph.components[i].glyphIndex];
+							if(typeof componentGlyph === "undefined")
+								throw new Error(`Incorrect componentGlyph index: ${glyph.components[i].glyphIndex}`);
+
+							glyphs.push(componentGlyph);
+
+							glyph.components[i].glyphIndex = (glyphs.length - 1);
+						}
+
+						glyphs.push(glyph);
+					}
+					break;
+				default:
+					throw new Error(`Incorrect glyph's class name: ${glyph.constructor.className}`);
+			}
+		}
+		//endregion
+
+		//region Make HMTX table (for now put all in "hMetrics")
+		tables.set(Tables.HMTX.tag, new Tables.HMTX({
+			hMetrics: Array.from(glyphs, element => ({
+				advanceWidth: element.hAdvanceWidth,
+				leftSideBearing: element.leftSideBearing,
+			}))
+		}));
+		//endregion
+
+		//region Make MAXP table from glyphs
+		const maxp = tables.get(Tables.MAXP.tag);
+		if(typeof maxp === "undefined")
+			tables.set(Tables.MAXP.tag, new Tables.MAXP({ version: 0x00010000, glyphs: glyphs }));
+		//endregion
+
+		//region Get major metrics from array of glyphs
+		const xMins = [];
+		const xMaxs = [];
+		const yMins = [];
+		const yMaxs = [];
+		const leftSideBearings = [];
+		const rightSideBearings = [];
+		const advanceWidths = [];
+
+		for(const glyph of glyphs)
+		{
+			// glyph -> hmtx (vmtx) -> hhea (vhea) -> cmap -> loca -> maxp
+			// "name" is a side table, "post" is mostly template
+
+			xMins.push(glyph.xMin);
+			xMaxs.push(glyph.xMax);
+			yMins.push(glyph.yMin);
+			yMaxs.push(glyph.yMax);
+
+			advanceWidths.push(glyph.hAdvanceWidth);
+			leftSideBearings.push(glyph.leftSideBearing);
+			rightSideBearings.push(glyph.hAdvanceWidth - (glyph.leftSideBearing + glyph.xMax - glyph.xMin));
+		}
+		//endregion
+
+		//region Make HHEA table
+		tables.set(Tables.HHEA.tag, new Tables.HHEA({
+			ascent: parameters.fontValues.ascent,
+			descent: parameters.fontValues.descent,
+			lineGap: parameters.fontValues.lineGap,
+			advanceWidthMax: Math.max.apply(null, advanceWidths),
+			minLeftSideBearing: Math.min.apply(null, leftSideBearings),
+			minRightSideBearing: Math.min.apply(null, rightSideBearings),
+			xMaxExtent: (Math.max.apply(null, leftSideBearings) + (Math.max.apply(null, xMaxs) - Math.min.apply(null, xMins))),
+			numOfLongHorMetrics: glyphs.length
+		}));
+		//endregion
+
+		//region Make HEAD table
+		tables.set(Tables.HEAD.tag, new Tables.HEAD({
+			flags: 3,
+			unitsPerEm: parameters.fontValues.unitsPerEm,
+			xMin: Math.min.apply(null, xMins),
+			xMax: Math.max.apply(null, xMaxs),
+			yMin: Math.min.apply(null, yMins),
+			yMax: Math.max.apply(null, yMaxs)
+		}));
+		//endregion
+
+		//region Make GLYF table
+		tables.set(Tables.GLYF.tag, new Tables.GLYF({
+			glyphs
+		}));
+		//endregion
+
+		//region Make CMAP table
+		if(parameters.cmaps !== []) // Have an ability to skip CMAP making
+		{
+			const subTables = [];
+
+			for(const cmap of parameters.cmaps)
+			{
+
+				switch(cmap.format)
+				{
+					case 0:
+						subTables.push(Format0.fromGlyphs(cmap.language, glyphs));
+						break;
+					case 4:
+						subTables.push(Format4.fromGlyphs(cmap.language, glyphs, cmap.platformID, cmap.platformSpecificID));
+						break;
+					case 6:
+						subTables.push(Format6.fromGlyphs(cmap.language, glyphs, cmap.firstCode, cmap.platformID, cmap.platformSpecificID));
+						break;
+					default:
+						throw new Error(`Unknow CMAP table format: ${cmap}`);
+				}
+
+			}
+
+			tables.set(Tables.CMAP.tag, new Tables.CMAP({
+				subTables
+			}));
+		}
+		//endregion
+
+		return new Font({
+			scalerType: ScalerTypes.true,
+			tables
+		});
+	}
+	//**********************************************************************************
+	static TTF(parameters = {})
 	{
 		//region Check input parameters
 		if(("glyphs" in parameters) === false)
 			throw new Error("Missing mandatory parameter glyphs");
 
+		// Object having values for "ascent", "descent" and "lineGap"
+		if(("fontValues" in parameters) === false)
+			throw new Error("Missing mandatory parameter fontValues");
+
+		if(("cmapFormat" in parameters) === false)
+			throw new Error("Missing mandatory parameter cmapFormat");
+
+		if(("cmapLanguage" in parameters) === false)
+			throw new Error("Missing mandatory parameter cmapLanguage");
+
 		let tables = new Map();
 		if("tables" in parameters)
 			tables = parameters.tables;
+
+		if(("missingGlyph" in parameters.fontValues) === false)
+			parameters.fontValues.missingGlyph = missingGlyph();
+
+		if(("nullGlyph" in parameters.fontValues) === false)
+			parameters.fontValues.nullGlyph = nullGlyph();
+		//endregion
+
+		//region Append mandatory "missing glyph" and "null glyph"
+		// https://developer.apple.com/fonts/TrueType-Reference-Manual/RM07/appendixB.html
+		parameters.glyphs = [
+			parameters.fontValues.missingGlyph,
+			parameters.fontValues.nullGlyph,
+			...parameters.glyphs
+		];
+		//endregion
+
+		//region Make HMTX table (for now put all in "hMetrics")
+		tables.set(Tables.HMTX.tag, new Tables.HMTX({
+			hMetrics: Array.from(parameters.glyphs, element => ({
+				advanceWidth: element.hAdvanceWidth,
+				leftSideBearing: element.leftSideBearing,
+			}))
+		}));
+		//endregion
+
+		//region Make MAXP table from glyphs
+		const maxp = tables.get(Tables.MAXP.tag);
+		if(typeof maxp === "undefined")
+			tables.set(Tables.MAXP.tag, new Tables.MAXP({ version: 0x00010000, glyphs: parameters.glyphs }));
 		//endregion
 
 		//region Get major metrics from array of glyphs
-		for(const glyph in parameters.glyphs)
+		const xMins = [];
+		const xMaxs = [];
+		const yMins = [];
+		const yMaxs = [];
+		const leftSideBearings = [];
+		const rightSideBearings = [];
+		const advanceWidths = [];
+
+		for(const glyph of parameters.glyphs)
 		{
 			// glyph -> hmtx (vmtx) -> hhea (vhea) -> cmap -> loca -> maxp
 			// "name" is a side table, "post" is mostly template
+
+			xMins.push(glyph.xMin);
+			xMaxs.push(glyph.xMax);
+			yMins.push(glyph.yMin);
+			yMaxs.push(glyph.yMax);
+
+			advanceWidths.push(glyph.hAdvanceWidth);
+			leftSideBearings.push(glyph.leftSideBearing);
+			rightSideBearings.push(glyph.hAdvanceWidth - (glyph.leftSideBearing + glyph.xMax - glyph.xMin));
 		}
 		//endregion
+
+		//region Make HHEA table
+		tables.set(Tables.HHEA.tag, new Tables.HHEA({
+			ascent: parameters.fontValues.ascent,
+			descent: parameters.fontValues.descent,
+			lineGap: parameters.fontValues.lineGap,
+			advanceWidthMax: Math.max.apply(null, advanceWidths),
+			minLeftSideBearing: Math.min.apply(null, leftSideBearings),
+			minRightSideBearing: Math.min.apply(null, rightSideBearings),
+			xMaxExtent: (Math.max.apply(null, leftSideBearings) + (Math.max.apply(null, xMaxs) - Math.min.apply(null, xMins))),
+			numOfLongHorMetrics: parameters.glyphs.length
+		}));
+		//endregion
+
+		//region Make HEAD table
+		tables.set(Tables.HEAD.tag, new Tables.HEAD({
+			flags: 11,
+			fontRevision: 456130,
+			unitsPerEm: parameters.fontValues.unitsPerEm,
+			xMin: Math.min.apply(null, xMins),
+			xMax: Math.max.apply(null, xMaxs),
+			yMin: Math.min.apply(null, yMins),
+			yMax: Math.max.apply(null, yMaxs)
+		}));
+		//endregion
+
+		//region Make GLYF table
+		tables.set(Tables.GLYF.tag, new Tables.GLYF({
+			glyphs: parameters.glyphs
+		}));
+		//endregion
+
+		//region Make CMAP table
+		if(parameters.cmapFormat !== (-1)) // Have an ability to skip CMAP making
+		{
+			let cmapSubtable = null;
+
+			switch(parameters.cmapFormat)
+			{
+				case 0:
+					cmapSubtable = Format0.fromGlyphs(parameters.cmapLanguage, parameters.glyphs);
+					break;
+				case 4:
+					cmapSubtable = Format4.fromGlyphs(parameters.cmapLanguage, parameters.glyphs);
+					break;
+				case 6:
+					cmapSubtable = Format6.fromGlyphs(parameters.cmapLanguage, parameters.glyphs);
+					break;
+				default:
+					throw new Error(`Unknow CMAP table format: ${parameters.cmapFormat}`);
+			}
+
+			tables.set(Tables.CMAP.tag, new Tables.CMAP({
+				subTables: [cmapSubtable]
+			}));
+		}
+		//endregion
+
+		return new Font({
+			scalerType: ScalerTypes.true,
+			tables
+		});
 	}
 	//**********************************************************************************
 	/**
-	 * Return array GID (as string hexadecimal representation) for particular string
 	 *
-	 * @param {string} str
-	 * @param {number} platformID
-	 * @param {number} platformSpecificID
-	 * @return {Array}
+	 * @param str
+	 * @param platformID
+	 * @param platformSpecificID
+	 * @param {?string} [bytes=null] String representing bytes template ("00", "0000" etc.)
+	 * @return {[]}
 	 */
-	stringToGIDs(str, platformID = 3, platformSpecificID = 1)
+	stringToGIDs(str, platformID = 3, platformSpecificID = 1, bytes = null)
 	{
 		//region Initial variables
 		const result = [];
@@ -702,22 +1157,25 @@ export class Font extends BaseClass
 		//endregion
 
 		//region Find correct number of bytes for GID codes
-		let bytes = "00";
-
-		switch(true)
+		if(bytes === null)
 		{
-			case (numGlyphs > 0xFF):
-				bytes = "0000";
-				break;
-			case (numGlyphs > 0xFFFF):
-				bytes = "000000";
-				break;
-			case (numGlyphs > 0xFFFFFF):
-				bytes = "00000000";
-				break;
-			case (numGlyphs > 0xFFFFFFFF):
-				bytes = "0000000000";
-				break;
+			bytes = "00";
+
+			switch(true)
+			{
+				case (numGlyphs > 0xFF):
+					bytes = "0000";
+					break;
+				case (numGlyphs > 0xFFFF):
+					bytes = "000000";
+					break;
+				case (numGlyphs > 0xFFFFFF):
+					bytes = "00000000";
+					break;
+				case (numGlyphs > 0xFFFFFFFF):
+					bytes = "0000000000";
+					break;
+			}
 		}
 		//endregion
 
@@ -734,13 +1192,39 @@ export class Font extends BaseClass
 			{
 				// Replace absent chars via GID = 0 (as it is required by standard)
 				const gid = cmap.gid(char.codePointAt(i), platformID, platformSpecificID) || 0;
-				
+
 				result.push(`${bytes}${gid.toString(16).toLocaleUpperCase()}`.slice(-1 * bytes.length));
 			}
 		}
 		//endregion
-		
+
 		return result;
+	}
+	//**********************************************************************************
+	/**
+	 * Return array GID (as array of GIDs) for particular string
+	 *
+	 * @param {string} str
+	 * @param {number} platformID
+	 * @param {number} platformSpecificID
+	 */
+	stringToGIDsArray(str, platformID = 3, platformSpecificID = 1)
+	{
+		const result = new Map();
+
+		//region Get CMAP table reference
+		const cmap = this.tables.get(Tables.CMAP.tag);
+		if(typeof cmap === "undefined")
+			throw new Error("No CMAP table in the font");
+		//endregion
+
+		for(const char of str)
+		{
+			for(let i = 0; i < char.length; i++)
+				result.set(cmap.gid(char.codePointAt(i)) || 0, 1);
+		}
+
+		return Array.from(result.keys());
 	}
 	//**********************************************************************************
 }

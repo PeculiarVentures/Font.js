@@ -1,4 +1,4 @@
-import { SeqStream } from "bytestreamjs";
+import { SeqStream } from "../../bytestreamjs/bytestream.js";
 import { BaseClass } from "../BaseClass.js";
 //**************************************************************************************
 export class CMAP extends BaseClass
@@ -92,34 +92,37 @@ export class CMAP extends BaseClass
 
 			//region Parse subtable
 			const format = subTableStream.getUint16();
-			const length = subTableStream.getUint16();
 
 			let subTable = { format };
 
-			if(length)
+			switch(format)
 			{
-				switch(format)
-				{
-					case 0:
-						subTable = Format0.fromStream(subTableStream);
-						break;
-					case 4:
-						subTable = Format4.fromStream(subTableStream);
-						break;
-					case 6:
-						subTable = Format6.fromStream(subTableStream);
-						break;
-					default:
-					//throw new Error(`Unknow CMAP subtable format - ${format}`);
-				}
-
-				//region Set upper lever subtable-specific information
-				subTable.platformID = subTables[i].platformID;
-				subTable.platformSpecificID = subTables[i].platformSpecificID;
-				//endregion
-
-				subTables[i] = subTable;
+				case 0:
+					subTable = Format0.fromStream(subTableStream);
+					break;
+				case 4:
+					subTable = Format4.fromStream(subTableStream);
+					break;
+				case 6:
+					subTable = Format6.fromStream(subTableStream);
+					break;
+				case 12:
+					subTable = Format12.fromStream(subTableStream);
+					break;
+				case 14:
+					subTable = Format14.fromStream(subTableStream);
+					break;
+				default:
+					console.log(`Unknow CMAP subtable format - ${format}`);
+				//throw new Error(`Unknow CMAP subtable format - ${format}`);
 			}
+
+			//region Set upper lever subtable-specific information
+			subTable.platformID = subTables[i].platformID;
+			subTable.platformSpecificID = subTables[i].platformSpecificID;
+			//endregion
+
+			subTables[i] = subTable;
 			//endregion
 		}
 
@@ -271,7 +274,7 @@ export class Format4 extends CMAPSubTable
 			};
 
 			if(format === 0)
-				information.delta = (segment.codeToGID.get(information.start) - information.start) & 0xFFFF;
+				information.delta = (segment.codeToGID.get(information.start) - information.start);// & 0xFFFF;
 			//endregion
 
 			segmentInformation.push(information);
@@ -342,6 +345,8 @@ export class Format4 extends CMAPSubTable
 	static fromStream(stream)
 	{
 		//region Read major information
+		const length = stream.getUint16();
+
 		const language = stream.getUint16();
 		const segCountX2 = stream.getUint16();
 		const segCount = segCountX2 >> 1;
@@ -450,6 +455,78 @@ export class Format4 extends CMAPSubTable
 	}
 	//**********************************************************************************
 	/**
+	 * Make Format4 table directly from array of code points
+	 *
+	 * @param {number} language
+	 * @param {Array} glyphs Array of glyphs. !!! MUST BE WITH "MISSING" AND "NULL" GLYPHS !!!
+	 * @param {number} [platformID=3]
+	 * @param {number} [platformSpecificID=1]
+	 */
+	static fromGlyphs(language, glyphs, platformID = 3, platformSpecificID = 1)
+	{
+		//region Initial variables
+		const codeToGID = new Map();
+
+		const segments = [];
+		//endregion
+
+		//region Fill map (!!! FIRST TWO GLYPHS MUST BE "MISSING" AND "NULL" GLYPHS !!!)
+		for(let i = 2; i < glyphs.length; i++)
+		{
+			for(const unicode of glyphs[i].unicodes)
+				codeToGID.set(unicode, i);
+		}
+		//endregion
+
+		//region Divide map to correct regions
+		const codeToGIDArray = Array.from(codeToGID).sort((a, b) => (a[0] - b[0]));
+
+		let segment = {
+			codeToGID: new Map(),
+			gidToCode: new Map()
+		};
+
+		let prevCode = codeToGIDArray[0][0] - 1;
+
+		for(let i = 0; i < codeToGIDArray.length; i++)
+		{
+			if(codeToGIDArray[i][0] > (prevCode + 1))
+			{
+				segments.push(segment);
+
+				segment = {
+					codeToGID: new Map([codeToGIDArray[i]]),
+					gidToCode: new Map([[codeToGIDArray[i][1], codeToGIDArray[i][0]]])
+				};
+			}
+			else
+			{
+				segment.codeToGID.set(codeToGIDArray[i][0], codeToGIDArray[i][1]);
+				segment.gidToCode.set(codeToGIDArray[i][1], codeToGIDArray[i][0]);
+			}
+
+			prevCode = codeToGIDArray[i][0];
+		}
+
+		segments.push(segment);
+		//endregion
+
+		//region Append specific segment for "missingGlyph"
+		segments.push({
+			codeToGID: new Map([[0xFFFF, 0]]),
+			gidToCode: new Map([[0, 0xFFFF]]),
+		});
+		//endregion
+
+		return new Format4({
+			language,
+			segments,
+			platformID,
+			platformSpecificID
+		});
+	}
+	//**********************************************************************************
+	/**
 	 * Return GID by character code
 	 *
 	 * @param {number} code Character code
@@ -535,6 +612,8 @@ export class Format6 extends CMAPSubTable
 	 */
 	static fromStream(stream)
 	{
+		const length = stream.getUint16();
+
 		const language = stream.getUint16();
 		const firstCode = stream.getUint16();
 		const entryCount = stream.getUint16();
@@ -551,6 +630,31 @@ export class Format6 extends CMAPSubTable
 			language,
 			firstCode,
 			glyphIndexArray
+		});
+	}
+	//**********************************************************************************
+	/**
+	 * Make Format6 table directly from array of glyphs
+	 *
+	 * @param {number} language
+	 * @param {Array} glyphs Array of glyphs
+	 * @param {number} [firstCode=32]
+	 * @param {number} [platformID=3]
+	 * @param {number} [platformSpecificID=1]
+	 */
+	static fromGlyphs(language, glyphs, firstCode = 32, platformID = 3, platformSpecificID = 1)
+	{
+		const glyphIndexArray = [];
+
+		for(let i = 0; i < glyphs.length; i++)
+			glyphIndexArray.push(i);
+
+		return new Format6({
+			language,
+			firstCode,
+			glyphIndexArray,
+			platformID,
+			platformSpecificID
 		});
 	}
 	//**********************************************************************************
@@ -574,6 +678,26 @@ export class Format6 extends CMAPSubTable
 		}
 
 		return result;
+	}
+	//**********************************************************************************
+	/**
+	 * Return character code by GID
+	 *
+	 * @param {number} gid Glyph index (GID)
+	 * @return {Array}
+	 */
+	code(gid)
+	{
+		switch(true)
+		{
+			case ((gid > (this.glyphIndexArray.length - 1)) && (gid < 0)):
+				return [];
+			case ((gid === 0) || (gid === 1)):
+				return [65535];
+			default:
+		}
+
+		return [this.firstCode + gid - 2]; // First GID belongs to "missing glyph", second is "null glyph"
 	}
 	//**********************************************************************************
 }
@@ -617,6 +741,7 @@ export class Format0 extends CMAPSubTable
 	 */
 	static fromStream(stream)
 	{
+		const length = stream.getUint16();
 		const language = stream.getUint16();
 
 		const glyphIndexArray = [];
@@ -630,6 +755,229 @@ export class Format0 extends CMAPSubTable
 		return new Format0({
 			language,
 			glyphIndexArray
+		});
+	}
+	//**********************************************************************************
+	/**
+	 * Make Format0 table directly from array of code points
+	 *
+	 * @param {number} language
+	 * @param {Array} glyphs Array of glyphs
+	 */
+	static fromGlyphs(language, glyphs)
+	{
+		return new Format0();
+	}
+	//**********************************************************************************
+}
+//**************************************************************************************
+export class Format12 extends CMAPSubTable
+{
+	//**********************************************************************************
+	constructor(parameters = {})
+	{
+		super(parameters);
+
+		this.language = parameters.language || 0;
+		this.groups = parameters.groups || [];
+
+		this.codeToGID = parameters.codeToGID || new Map();
+		this.gidToCode = parameters.gidToCode || new Map();
+	}
+	//**********************************************************************************
+	static get className()
+	{
+		return "Format12";
+	}
+	//**********************************************************************************
+	/**
+	 * Convert current object to SeqStream data
+	 * @param {!SeqStream} stream
+	 * @returns {boolean} Result of the function
+	 */
+	toStream(stream)
+	{
+		return true;
+	}
+	//**********************************************************************************
+	/**
+	 * Convert SeqStream data to object
+	 * @param {!SeqStream} stream
+	 * @returns {*} Result of the function
+	 */
+	static fromStream(stream)
+	{
+		//region Initial variables
+		const codeToGID = new Map();
+		const gidToCode = new Map();
+		//endregion
+
+		//region Read major information
+		const reserved = stream.getUint16();
+		const length = stream.getUint32();
+		const language = stream.getUint32();
+		const numGroups = stream.getUint32();
+		//endregion
+
+		//region Read information about groups
+		for(let i = 0; i < numGroups; i++)
+		{
+			const startCharCode = stream.getUint32();
+			const endCharCode = stream.getUint32();
+			let startGlyphID = stream.getUint32();
+
+			for(let j = startCharCode; j <= endCharCode; j++, startGlyphID++)
+			{
+				let code = gidToCode.get(startGlyphID);
+				if(typeof code === "undefined")
+					code = [];
+
+				code.push(j);
+
+				gidToCode.set(startGlyphID, code);
+
+				let glyph = codeToGID.get(j);
+				if(typeof glyph === "undefined")
+					glyph = [];
+
+				glyph.push(startGlyphID);
+
+				codeToGID.set(j, glyph);
+			}
+		}
+		//endregion
+
+		return new Format12({
+			language,
+			gidToCode,
+			codeToGID
+		});
+	}
+	//**********************************************************************************
+	/**
+	 * Return GID by character code
+	 *
+	 * @param {number} code Character code
+	 * @return {number|null}
+	 */
+	gid(code)
+	{
+		return (this.codeToGID.get(code) || 0);
+	}
+	//**********************************************************************************
+	/**
+	 * Return character code by GID
+	 *
+	 * @param {number} gid Glyph index (GID)
+	 * @return {Array}
+	 */
+	code(gid)
+	{
+		return (this.gidToCode.get(gid) || []);
+	}
+	//**********************************************************************************
+}
+//**************************************************************************************
+export class Format14 extends CMAPSubTable
+{
+	//**********************************************************************************
+	constructor(parameters = {})
+	{
+		super(parameters);
+
+		this.varSelectorRecords = parameters.varSelectorRecords || [];
+	}
+	//**********************************************************************************
+	static get className()
+	{
+		return "Format14";
+	}
+	//**********************************************************************************
+	/**
+	 * Convert current object to SeqStream data
+	 * @param {!SeqStream} stream
+	 * @returns {boolean} Result of the function
+	 */
+	toStream(stream)
+	{
+		return true;
+	}
+	//**********************************************************************************
+	/**
+	 * Convert SeqStream data to object
+	 * @param {!SeqStream} stream
+	 * @returns {*} Result of the function
+	 */
+	static fromStream(stream)
+	{
+		//region Read major information
+		const length = stream.getUint32();
+		const numVarSelectorRecords = stream.getUint32();
+		//endregion
+
+		//region Read "varSelectorRecords" array
+		const varSelectorRecords = [];
+
+		for(let i = 0; i < numVarSelectorRecords; i++)
+		{
+			//region Initial variables
+			const varSelectorRecord = {};
+			//endregion
+
+			//region Read header
+			varSelectorRecord.varSelector = stream.getUint24();
+			varSelectorRecord.defaultUVSOffset = stream.getUint32();
+			varSelectorRecord.nonDefaultUVSOffset = stream.getUint32();
+			//endregion
+
+			//region Read "default UVS"
+			if(varSelectorRecord.defaultUVSOffset)
+			{
+				varSelectorRecord.defaultUVSRecords = [];
+
+				const defaultUVSStream = new SeqStream({ stream: stream.stream.slice(varSelectorRecord.defaultUVSOffset) });
+
+				const numUnicodeValueRanges = defaultUVSStream.getUint32();
+
+				for(let j = 0; j < numUnicodeValueRanges; j++)
+				{
+					const defaultUVS = {};
+
+					defaultUVS.startUnicodeValue = defaultUVSStream.getUint24();
+					defaultUVS.additionalCount = (defaultUVSStream.getBlock(1))[0];
+
+					varSelectorRecord.defaultUVSRecords.push(defaultUVS);
+				}
+			}
+			//endregion
+
+			//region Read "non-default UVS"
+			if(varSelectorRecord.nonDefaultUVSOffset)
+			{
+				varSelectorRecord.nonDefaultUVSRecords = [];
+
+				const nonDefaultUVSStream = new SeqStream({ stream: stream.stream.slice(varSelectorRecord.nonDefaultUVSOffset) });
+
+				const numUVSMappings = nonDefaultUVSStream.getUint32();
+
+				for(let j = 0; j < numUVSMappings; j++)
+				{
+					const uvsMapping = {};
+
+					uvsMapping.unicodeValue = nonDefaultUVSStream.getUint24();
+					uvsMapping.glyphID = nonDefaultUVSStream.getUint16();
+
+					varSelectorRecord.nonDefaultUVSRecords.push(uvsMapping);
+				}
+			}
+			//endregion
+
+			varSelectorRecords.push(varSelectorRecord);
+		}
+		//endregion
+
+		return new Format14({
+			varSelectorRecords
 		});
 	}
 	//**********************************************************************************
