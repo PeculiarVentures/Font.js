@@ -2,23 +2,6 @@
 
 Font.js (FontJS) is library helping parse/encode and manipulate TrueType font files. In a future there is a plan to extend support to OpenType fonts as well.
 
-## Supported TrueType Tables
-
-* cmap
-* cvt
-* fpgm
-* glyf
-* hdmx
-* head
-* hhea
-* hmtx
-* loca
-* maxp
-* name
-* OS/2
-* post
-* prep
-
 ## Example
 ```javascript
 import * as fontjs from "fontjs";
