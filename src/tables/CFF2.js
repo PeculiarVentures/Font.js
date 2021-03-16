@@ -1,4 +1,4 @@
-import { SeqStream } from "../../bytestreamjs/bytestream.js";
+import { SeqStream } from "bytestreamjs";
 import { BaseClass } from "../BaseClass.js";
 import { INDEX, DICT } from "./CFF.js";
 import { getF2Dot14 } from "../common.js";

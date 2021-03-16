@@ -1,4 +1,4 @@
-import { SeqStream } from "../../bytestreamjs/bytestream.js";
+import { SeqStream } from "bytestreamjs";
 import { BaseClass } from "../BaseClass.js";
 //**************************************************************************************
 class Format extends BaseClass
