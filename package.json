@@ -45,7 +45,9 @@
     "rollup-plugin-node-resolve": "4.0.1"
   },
   "dependencies": {
-    "bytestreamjs": "latest"
+    "asn1js": "latest",
+    "bytestreamjs": "latest",
+    "pkijs": "latest"
   },
   "esdoc": {
     "source": "./src",
