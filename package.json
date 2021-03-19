@@ -1,4 +1,15 @@
 {
+  "name": "fontjs",
+  "version": "2.0.1",
+  "description": "FontJS (Font.js) is a packages for TrueType font parsing and manipulation",
+  "files": [
+    "build",
+    "README.md",
+    "LICENSE"
+  ],
+  "module": "./build/mjs/index.js",
+  "main": "./build/cjs/index.js",
+  "types": "./build/types/index.d.ts",
   "author": {
     "email": "yury@strozhevsky.com",
     "name": "Yury Strozhevsky"
@@ -9,16 +20,16 @@
       "name": "Ryan Hurst"
     }
   ],
-  "name": "fontjs",
-  "version": "2.0.1",
-  "description": "FontJS (Font.js) is a packages for TrueType font parsing and manipulation",
-  "jsnext:main": "./src/index.js",
-  "module": "./src/index.js",
-  "main": "./build/index.js",
   "scripts": {
-    "build": "babel src --compact=false --out-dir build --source-maps",
-    "build:docs": "esdoc",
-    "prepublishOnly": "npm run build"
+    "test": "mocha",
+    "clear": "rimraf build/* docs",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "build": "npm run build:module && npm run build:types",
+    "build:module": "rollup -c",
+    "prebuild:types": "rimraf build/types",
+    "build:types": "tsc -p tsconfig.json --outDir build/types --declaration --emitDeclarationOnly",
+    "rebuild": "npm run clear && npm run build"
   },
   "keywords": [
     "TrueType"
@@ -28,35 +39,23 @@
     "url": "git://github.com/PeculiarVentures/Font.js.git"
   },
   "devDependencies": {
-    "@babel/cli": "^7.0.0",
-    "@babel/core": "^7.0.0",
-    "babel-plugin-istanbul": "latest",
-    "@babel/preset-env": "^7.0.0",
-    "@babel/register": "^7.0.0",
-    "cross-env": "latest",
-    "esdoc": "latest",
-    "esdoc-standard-plugin": "latest",
-    "eslint": "latest",
-    "mocha": "latest",
-    "nyc": "latest",
-    "rollup": "latest",
-    "rollup-plugin-commonjs": "latest",
-    "rollup-plugin-node-builtins": "latest",
-    "rollup-plugin-node-resolve": "4.0.1"
+    "@types/asn1js": "^2.0.0",
+    "@typescript-eslint/eslint-plugin": "^4.18.0",
+    "@typescript-eslint/parser": "^4.18.0",
+    "eslint": "^7.22.0",
+    "mocha": "^8.3.2",
+    "nyc": "^15.1.0",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.42.0",
+    "rollup-plugin-typescript2": "^0.30.0",
+    "ts-node": "9.1.1",
+    "typescript": "3.4.3"
   },
   "dependencies": {
-    "asn1js": "latest",
-    "bytestreamjs": "latest",
-    "pkijs": "latest"
-  },
-  "esdoc": {
-    "source": "./src",
-    "destination": "./docs",
-    "plugins": [
-      {
-        "name": "esdoc-standard-plugin"
-      }
-    ]
+    "@types/mocha": "^8.2.1",
+    "asn1js": "^2.1.0",
+    "bytestreamjs": "next",
+    "pkijs": "^2.1.93"
   },
   "license": "BSD-3-Clause"
 }
