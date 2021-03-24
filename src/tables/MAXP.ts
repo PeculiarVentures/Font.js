@@ -1,5 +1,6 @@
 import { SeqStream } from "bytestreamjs";
 import { BaseClass } from "../BaseClass";
+import { FontTable } from "../Table";
 import { Glyph, SimpleGlyph, CompoundGlyph } from "./GLYF";
 
 export interface MAXPParameters {
@@ -21,7 +22,7 @@ export interface MAXPParameters {
 	glyphs?: Glyph[];
 }
 
-export class MAXP extends BaseClass {
+export class MAXP extends FontTable {
 	public version: number;
 	public numGlyphs: number;
 	public maxPoints?: number;

@@ -1,11 +1,11 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../BaseClass";
+import { FontTable } from "../Table";
 
 export interface FPGMParameters {
 	values?: Uint8Array;
 }
 
-export class FPGM extends BaseClass {
+export class FPGM extends FontTable {
 
 	public values: Uint8Array;
 

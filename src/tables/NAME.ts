@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../BaseClass";
+import { FontTable } from "../Table";
 
 export interface NAMERecord {
 	platformID: number;
@@ -18,7 +18,7 @@ export interface NAMEParameters {
 	nameRecords?: NAMERecord[];
 }
 
-export class NAME extends BaseClass {
+export class NAME extends FontTable {
 	format: number;
 	count: number;
 	stringOffset: number;

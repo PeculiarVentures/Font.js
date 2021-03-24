@@ -1,6 +1,6 @@
 import { SeqStream } from "bytestreamjs";
-import { Matrix } from "../../Matrix.js";
-import { getF2Dot14, appendF2Dot14, checkFlag } from "../../common.js";
+import { Matrix } from "../../Matrix";
+import { getF2Dot14, appendF2Dot14, checkFlag } from "../../common";
 import { CompoundGlyphFlags } from "./CompoundGlyphFlags";
 import { Glyph, GlyphParameters } from "./Glyph";
 

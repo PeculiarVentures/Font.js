@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../BaseClass";
+import { FontTable } from "../Table";
 
 // Standard names
 // https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6post.html
@@ -281,7 +281,7 @@ export interface POSTParameters {
 	numberOfGlyphs?: number;
 }
 
-export class POST extends BaseClass { // TODO Split into versions
+export class POST extends FontTable { // TODO Split into versions
 	version: number;
 	italicAngle: number;
 	underlinePosition: number;

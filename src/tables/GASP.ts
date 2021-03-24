@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../BaseClass";
+import { FontTable } from "../Table";
 
 export enum RangeGaspBehaviorFlags {
 
@@ -35,7 +35,7 @@ export interface GASPParameters {
 	gaspRanges?: GASPRange[];
 }
 
-export class GASP extends BaseClass {
+export class GASP extends FontTable {
 
 	public version: number;
 	public gaspRanges: GASPRange[];

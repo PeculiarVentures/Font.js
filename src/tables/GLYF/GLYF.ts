@@ -1,13 +1,16 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../../BaseClass";
+import { FontTable } from "../../Table";
 import { LOCA } from "../LOCA";
+import { CompoundGlyph } from "./CompoundGlyph";
+import { EmptyGlyph } from "./EmptyGlyph";
 import { Glyph } from "./Glyph";
+import { SimpleGlyph } from "./SimpleGlyph";
 
 export interface GLYFParameters {
 	glyphs?: Glyph[];
 }
 
-export class GLYF extends BaseClass {
+export class GLYF extends FontTable {
 	public glyphs: Glyph[];
 	public loca?: number[];
 
@@ -86,7 +89,23 @@ export class GLYF extends BaseClass {
 		}
 		//#endregion
 
-		return new GLYF({ glyphs: Array.from(streams, element => Glyph.new(element)) as Glyph[] }); // TODO Fix `as Glyph[]`
+		return new GLYF({ glyphs: Array.from(streams, element => GLYF.new(element)) as Glyph[] }); // TODO Fix `as Glyph[]`
+	}
+
+	private static new(stream: SeqStream): Glyph | null { // TODO: Move to fabric to fix circular dependency
+		const numberOfContours = stream.getInt16();
+		stream.resetPosition();
+
+		switch (true) {
+			case (numberOfContours === 0):
+				return new EmptyGlyph({ stream });
+			case (numberOfContours > 0):
+				return new SimpleGlyph({ stream });
+			case (numberOfContours < 0):
+				return new CompoundGlyph({ stream });
+		}
+
+		return null;
 	}
 
 }

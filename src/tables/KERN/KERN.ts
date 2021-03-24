@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../../BaseClass";
+import { FontTable } from "../../Table";
 import { KERNFormat } from "./Format";
 import { KERNFormat0 } from "./Format0";
 import { KERNFormat2 } from "./Format2";
@@ -42,7 +42,7 @@ export interface KERNParameters {
 	tables?: KERNTableType[];
 }
 
-export class KERN extends BaseClass {
+export class KERN extends FontTable {
 
 	public version: number;
 	public tables: KERNTableType[];

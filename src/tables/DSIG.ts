@@ -4,7 +4,7 @@ import * as asn1js from "asn1js";
 // @ts-ignore
 import * as pkijs from "pkijs";
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../BaseClass";
+import { FontTable } from "../Table";
 
 
 export interface SignatureBlock {
@@ -28,7 +28,7 @@ export interface DSIGParameters {
 	flags?: number;
 	signatureRecords?: SignatureRecord[];
 }
-export class DSIG extends BaseClass {
+export class DSIG extends FontTable {
 
 	public version: number;
 	public numSignatures: number;

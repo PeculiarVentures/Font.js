@@ -1,11 +1,11 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../BaseClass";
+import { FontTable } from "../Table";
 
 export interface CVTParameters {
 	values?: number[];
 }
 
-export class CVT extends BaseClass {
+export class CVT extends FontTable {
 
 	public values: number[];
 

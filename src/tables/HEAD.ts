@@ -1,6 +1,6 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../BaseClass";
-import { getLongDateTime, appendLongDateTime } from "../common.js";
+import { getLongDateTime, appendLongDateTime } from "../common";
+import { FontTable } from "../Table";
 
 export interface HEADParameters {
 	version?: number;
@@ -22,7 +22,7 @@ export interface HEADParameters {
 	glyphDataFormat?: number;
 }
 
-export class HEAD extends BaseClass {
+export class HEAD extends FontTable {
 
 	public version: number;
 	public fontRevision: number;

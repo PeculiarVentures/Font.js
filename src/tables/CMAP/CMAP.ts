@@ -1,19 +1,43 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../../BaseClass";
 import { CMAPSubTable } from "./CMAPSubTable";
 import { Format14 } from "./Format14";
 import { Format0 } from "./Format0";
 import { Format12 } from "./Format12";
 import { Format4 } from "./Format4";
 import { Format6 } from "./Format6";
+import { FontTable } from "../../Table";
 
 export interface CMAPParameters {
 	version?: number;
 	subTables?: CMAPSubTable[];
 }
 
-export class CMAP extends BaseClass {
+export interface CMAPType {
+	format: number;
+	language: number;
+	platformID: number;
+	platformSpecificID: number;
+	firstCode?: number;
+}
 
+/**
+ * https://docs.microsoft.com/en-us/typography/opentype/spec/cmap
+ *
+ * Header
+ * ===============================
+ * uint16						version						Table version number (0).
+ * uint16						numTables					Number of encoding tables that follow.
+ * EncodingRecord		encodingRecords[numTables]
+ */
+
+/**
+ * This table defines the mapping of character codes to the glyph index values used in the font.
+ */
+export class CMAP extends FontTable {
+
+	/**
+	 * Table version number
+	 */
 	public version: number;
 	public subTables: CMAPSubTable[];
 	public format?: number; // TODO Used in Font
@@ -39,7 +63,7 @@ export class CMAP extends BaseClass {
 
 	public toStream(stream: SeqStream): boolean {
 		stream.appendUint16(this.version);
-		stream.appendUint16(this.subTables.length);
+		stream.appendUint16(this.subTables.length); // numTables
 
 		const subTablesHeader = new SeqStream();
 		const subTablesData = new SeqStream();
@@ -80,7 +104,7 @@ export class CMAP extends BaseClass {
 			const platformSpecificID = stream.getUint16();
 			const offset = stream.getUint32();
 
-			const subTableStream = new SeqStream({ stream: stream.stream.slice(offset) });
+			const subTableStream = new SeqStream({ stream: stream.stream.slice(offset) }); // TODO Optimize. Use subarray
 
 			//#region Parse subtable
 			const format = subTableStream.getUint16();

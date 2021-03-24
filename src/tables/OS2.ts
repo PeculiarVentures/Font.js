@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../BaseClass";
+import { FontTable } from "../Table";
 
 export interface OS2Parameters {
 	version?: number;
@@ -44,7 +44,7 @@ export interface OS2Parameters {
 
 }
 
-export class OS2 extends BaseClass { // TODO should be split into version classes
+export class OS2 extends FontTable { // TODO should be split into version classes
 	version: number;
 	xAvgCharWidth: number;
 	usWeightClass: number;

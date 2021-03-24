@@ -1,10 +1,10 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../../BaseClass";
+import { FontTable } from "../../Table";
 import { AttachListTable } from "./AttachListTable";
 import { ClassDefTable } from "./ClassDefTable";
 import { GDEFParameters, LigCaretListTable } from "./LigCaretListTable";
 
-export class GDEF extends BaseClass {
+export class GDEF extends FontTable {
 
 	constructor(parameters: GDEFParameters = {}) {
 		super();

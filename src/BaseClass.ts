@@ -3,6 +3,9 @@ import { SeqStream } from "bytestreamjs";
 
 export class BaseClass {
 
+	/**
+	 * Returns name of the class
+	 */
 	public static get className() {
 		return "BaseClass";
 	}

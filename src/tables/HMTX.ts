@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../BaseClass";
+import { FontTable } from "../Table";
 
 export interface HMTXMetrix {
 	advanceWidth: number;
@@ -11,7 +11,7 @@ export interface HMTXParameters {
 	leftSideBearings?: number[];
 }
 
-export class HMTX extends BaseClass {
+export class HMTX extends FontTable {
 
 	public hMetrics: HMTXMetrix[];
 	public leftSideBearings: number[];

@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../BaseClass";
+import { FontTable } from "../Table";
 
 export interface HDMXRecord {
 	widths: Uint8Array;
@@ -12,7 +12,7 @@ export interface HDMXParameters {
 	records?: HDMXRecord[];
 }
 
-export class HDMX extends BaseClass {
+export class HDMX extends FontTable {
 
 	public version: number;
 	public records: HDMXRecord[];

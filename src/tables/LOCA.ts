@@ -1,12 +1,12 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../BaseClass";
+import { FontTable } from "../Table";
 
 export interface LOCAParameters {
 	offsets?: number[];
 	indexToLocFormat?: number;
 }
 
-export class LOCA extends BaseClass {
+export class LOCA extends FontTable {
 
 	public offsets: number[];
 	public indexToLocFormat: number;

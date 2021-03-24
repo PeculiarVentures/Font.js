@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { checkFlag } from "../../common.js";
+import { checkFlag } from "../../common";
 import { SimpleGlyphFlags } from "./SimpleGlyphFlags";
 import { Glyph, GlyphParameters } from "./Glyph";
 
@@ -289,62 +289,62 @@ export class SimpleGlyph extends Glyph {
 	}
 
 	public get endPtsOfContours() {
-		if ("_endPtsOfContours" in this) {
+		if (!this._endPtsOfContours) {
 			this.decode();
 		}
 
-		return this._endPtsOfContours;
+		return this._endPtsOfContours!;
 	}
 
-	public set endPtsOfContours(value: number[] | undefined) {
+	public set endPtsOfContours(value: number[]) {
 		this._endPtsOfContours = value;
 	}
 
 	public get instructions() {
-		if ("_instructions" in this) {
+		if (!this._instructions) {
 			this.decode();
 		}
 
-		return this._instructions;
+		return this._instructions!;
 	}
 
-	public set instructions(value: number[] | undefined) {
+	public set instructions(value: number[]) {
 		this._instructions = value;
 	}
 
 	public get flags() {
-		if ("_flags" in this) {
+		if (!("_flags" in this)) {
 			this.decode();
 		}
 
-		return this._flags;
+		return this._flags!;
 	}
 
-	public set flags(value: number[] | undefined) {
+	public set flags(value: number[]) {
 		this._flags = value;
 	}
 
 	public get xCoordinates() {
-		if ("_xCoordinates" in this) {
+		if (!this._xCoordinates) {
 			this.decode();
 		}
 
-		return this._xCoordinates;
+		return this._xCoordinates!;
 	}
 
-	public set xCoordinates(value: number[] | undefined) {
+	public set xCoordinates(value: number[]) {
 		this._xCoordinates = value;
 	}
 
 	public get yCoordinates() {
-		if ("_yCoordinates" in this) {
+		if (!this._yCoordinates) {
 			this.decode();
 		}
 
-		return this._yCoordinates;
+		return this._yCoordinates!;
 	}
 
-	public set yCoordinates(value: number[] | undefined) {
+	public set yCoordinates(value: number[]) {
 		this._yCoordinates = value;
 	}
 

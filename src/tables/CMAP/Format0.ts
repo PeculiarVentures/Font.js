@@ -1,14 +1,16 @@
 import { SeqStream } from "bytestreamjs";
 import { Glyph } from "../GLYF/Glyph";
-import { CMAPSubTable, CMAPSubTableParameters } from "./CMAPSubTable";
+import { CMAPLanguage, CMAPSubTable, CMAPSubTableParameters } from "./CMAPSubTable";
 
 export interface Format0Parameters extends CMAPSubTableParameters {
+	format?: 0;
 	language?: number;
 	glyphIndexArray?: number[];
 }
 
-export class Format0 extends CMAPSubTable {
+export class Format0 extends CMAPSubTable implements CMAPLanguage {
 
+	public readonly format: 0 = 0;
 	public language: number;
 	public glyphIndexArray: number[];
 
@@ -24,11 +26,11 @@ export class Format0 extends CMAPSubTable {
 	}
 
 	public toStream(stream: SeqStream): boolean {
-		stream.appendUint16(0); // CMAP format
-		stream.appendUint16(262);
-		stream.appendUint16(this.language);
+		stream.appendUint16(this.format); // format
+		stream.appendUint16(262); // TODO Fixed value? // length
+		stream.appendUint16(this.language); // language
 
-		stream.appendView(new Uint8Array(this.glyphIndexArray));
+		stream.appendView(new Uint8Array(this.glyphIndexArray)); // glyphIdArray[256]
 
 		return true;
 	}

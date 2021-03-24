@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../BaseClass";
+import { FontTable } from "../Table";
 
 export interface HHEAParameters {
 	version?: number;
@@ -21,7 +21,7 @@ export interface HHEAParameters {
 	numOfLongHorMetrics?: number;
 }
 
-export class HHEA extends BaseClass {
+export class HHEA extends FontTable {
 
 	public version: number;
 	public ascent: number;
@@ -64,11 +64,11 @@ export class HHEA extends BaseClass {
 		this.numOfLongHorMetrics = parameters.numOfLongHorMetrics || 0;
 	}
 
-	static get tag() {
+	public static get tag() {
 		return 0x68686561;
 	}
 
-	public toStream(stream: SeqStream) {
+	public toStream(stream: SeqStream): boolean {
 		stream.appendUint32(this.version);
 		stream.appendInt16(this.ascent);
 		stream.appendInt16(this.descent);

@@ -54,22 +54,6 @@ export class Glyph extends BaseClass {
 		return "Glyph";
 	}
 
-	public static new(stream: SeqStream): Glyph | null { // TODO: Move to fabric to fix circular dependency
-		const numberOfContours = stream.getInt16();
-		stream.resetPosition();
-
-		switch (true) {
-			case (numberOfContours === 0):
-				return new EmptyGlyph({ stream });
-			case (numberOfContours > 0):
-				return new SimpleGlyph({ stream });
-			case (numberOfContours < 0):
-				return new CompoundGlyph({ stream });
-		}
-
-		return null;
-	}
-
 	public decode(): void {
 		this.numberOfContours = this.stream.getInt16();
 		this.xMin = this.stream.getInt16();
@@ -79,10 +63,6 @@ export class Glyph extends BaseClass {
 	}
 
 	public encode(stream: SeqStream) {
-		if ("_numberOfContours" in this) {
-			this.decode();
-		}
-
 		stream.appendInt16(this.numberOfContours);
 		stream.appendInt16(this.xMin);
 		stream.appendInt16(this.yMin);
@@ -91,7 +71,7 @@ export class Glyph extends BaseClass {
 	}
 
 	public get numberOfContours(): number {
-		if ("_numberOfContours" in this) {
+		if (this._numberOfContours === undefined) {
 			this.decode();
 		}
 
@@ -103,7 +83,7 @@ export class Glyph extends BaseClass {
 	}
 
 	public get xMin(): number {
-		if ("_xMin" in this) {
+		if (this._xMin === undefined) {
 			this.decode();
 		}
 
@@ -115,7 +95,7 @@ export class Glyph extends BaseClass {
 	}
 
 	public get yMin(): number {
-		if ("_yMin" in this) {
+		if (this._yMin === undefined) {
 			this.decode();
 		}
 
@@ -127,7 +107,7 @@ export class Glyph extends BaseClass {
 	}
 
 	public get xMax(): number {
-		if ("_xMax" in this) {
+		if (this._xMax === undefined) {
 			this.decode();
 		}
 
@@ -139,7 +119,7 @@ export class Glyph extends BaseClass {
 	}
 
 	public get yMax(): number {
-		if ("_yMax" in this) {
+		if (this._yMax === undefined) {
 			this.decode();
 		}
 
@@ -151,7 +131,3 @@ export class Glyph extends BaseClass {
 	}
 
 }
-
-import { CompoundGlyph } from "./CompoundGlyph";
-import { SimpleGlyph } from "./SimpleGlyph";
-import { EmptyGlyph } from "./EmptyGlyph";

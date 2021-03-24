@@ -37,7 +37,7 @@ function calculateCheckSum(buffer: ArrayBuffer): number {
 }
 
 interface FONTValues {
-	missingGlyph?: Tables.SimpleGlyph;
+	missingGlyph?: Tables.Glyph;
 	nullGlyph?: Tables.SimpleGlyph;
 	ascent?: number;
 	descent?: number;
@@ -48,7 +48,7 @@ interface FONTValues {
 export interface FontSubsetParameters {
 	fontValues: FONTValues;
 	glyphIndexes: number[];
-	cmaps: Tables.CMAP[];
+	cmaps: Tables.CMAPType[];
 	cmapLanguage: number;
 	tables?: Map<number, BaseClass>;
 }
@@ -562,7 +562,7 @@ export class Font extends BaseClass {
 						return result || null;
 					}
 				default:
-					console.log(tag); // TODO Don't use console
+					console.log(`Invalid table tag - ${tag}`); // TODO Don't use console
 				//throw new Error(`Invalid table tag - ${tag}`);
 			}
 
@@ -829,11 +829,13 @@ export class Font extends BaseClass {
 			tables = parameters.tables;
 		}
 
-		if (!parameters.fontValues.missingGlyph)
+		if (!parameters.fontValues.missingGlyph) {
 			parameters.fontValues.missingGlyph = missingGlyph();
+		}
 
-		if (!parameters.fontValues.nullGlyph)
+		if (!parameters.fontValues.nullGlyph) {
 			parameters.fontValues.nullGlyph = nullGlyph();
+		}
 		//#endregion
 
 		//#region Make a glyphs array

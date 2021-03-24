@@ -1,10 +1,10 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../BaseClass";
+import { FontTable } from "../Table";
 
 export interface PREPParameters {
 	values?: Uint8Array;
 }
-export class PREP extends BaseClass {
+export class PREP extends FontTable {
 
 	public values: Uint8Array;
 

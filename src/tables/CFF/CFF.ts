@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../../BaseClass";
+import { FontTable } from "../../Table";
 import { CFFCharset } from "./CFFCharset";
 import { CFFEncoding } from "./CFFEncoding";
 import { CFFPrivateDICT } from "./CFFPrivateDICT";
@@ -11,7 +11,7 @@ export interface CFFParameters {
   dicts?: CFFTopDICT[];
 }
 
-export class CFF extends BaseClass {
+export class CFF extends FontTable {
   public dicts: CFFTopDICT[];
 
   constructor(parameters: CFFParameters = {}) {

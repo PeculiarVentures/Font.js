@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { BaseClass } from "../../BaseClass";
+import { FontTable } from "../../Table";
 import { INDEX, DICT } from "../CFF";
 import { CFF2CharstringINDEX } from "./CFF2CharstringINDEX";
 import { CFF2FDSelect } from "./CFF2FDSelect";
@@ -17,7 +17,7 @@ export interface CFF2Parameters {
 	VariationStoreData?: VariationStoreData;
 }
 
-export class CFF2 extends BaseClass {
+export class CFF2 extends FontTable {
 
 	public FDSelect?: CFF2FDSelect;
 	public topDICT?: CFF2TopDICT;
