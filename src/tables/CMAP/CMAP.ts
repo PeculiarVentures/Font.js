@@ -8,6 +8,9 @@ import { Format6 } from "./Format6";
 import { FontTable } from "../../Table";
 
 export interface CMAPParameters {
+	/**
+	 * Table version number (0)
+	 */
 	version?: number;
 	subTables?: CMAPSubTable[];
 }
@@ -21,30 +24,16 @@ export interface CMAPType {
 }
 
 /**
- * https://docs.microsoft.com/en-us/typography/opentype/spec/cmap
- *
- * Header
- * ===============================
- * uint16						version						Table version number (0).
- * uint16						numTables					Number of encoding tables that follow.
- * EncodingRecord		encodingRecords[numTables]
- */
-
-/**
- * This table defines the mapping of character codes to the glyph index values used in the font.
+ * Representation of CMAP. Character to Glyph Index Mapping Table
+ * @see https://docs.microsoft.com/en-us/typography/opentype/spec/cmap
  */
 export class CMAP extends FontTable {
 
 	/**
-	 * Table version number
+	 * Table version number (0)
 	 */
 	public version: number;
 	public subTables: CMAPSubTable[];
-	public format?: number; // TODO Used in Font
-	public language = 0; // TODO Used in Font
-	public platformID?: number | undefined; // TODO Used in Font
-	public platformSpecificID?: number | undefined; // TODO Used in Font
-	public firstCode?: number | undefined; // TODO Used in Font
 
 	constructor(parameters: CMAPParameters = {}) {
 		super();
@@ -69,7 +58,7 @@ export class CMAP extends FontTable {
 		const subTablesData = new SeqStream();
 
 		for (const subTable of this.subTables) {
-			if (subTable === null) {
+			if (!subTable) {
 				continue;
 			}
 
@@ -105,11 +94,12 @@ export class CMAP extends FontTable {
 			const offset = stream.getUint32();
 
 			const subTableStream = new SeqStream({ stream: stream.stream.slice(offset) }); // TODO Optimize. Use subarray
+			// const subTableStream = stream;
 
 			//#region Parse subtable
 			const format = subTableStream.getUint16();
 
-			let subTable: CMAPSubTable;
+			let subTable: CMAPSubTable | null = null;
 
 			switch (format) {
 				case 0:
@@ -127,14 +117,17 @@ export class CMAP extends FontTable {
 				case 14:
 					subTable = Format14.fromStream(subTableStream);
 					break;
+				case 2: // TODO Format2 is not implemented https://docs.microsoft.com/en-us/typography/opentype/spec/cmap#format-2-high-byte-mapping-through-table
 				default:
 					console.log(`Unknown CMAP subtable format - ${format}`); // TODO Don't use console
-					subTable = new CMAPSubTable(); // TODO Added by @microshine
 				//throw new Error(`Unknown CMAP subtable format - ${format}`);
 			}
 
+			if (!subTable) {
+				break;
+			}
+
 			//#region Set upper lever subtable-specific information
-			subTable.format = format;
 			subTable.platformID = platformID;
 			subTable.platformSpecificID = platformSpecificID;
 			//#endregion

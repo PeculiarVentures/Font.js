@@ -10,6 +10,13 @@ export interface Format6Parameters extends CMAPSubTableParameters {
 
 export class Format6 extends CMAPSubTable {
 
+	/**
+	 * Format number is set to 6
+	 */
+	public get format(): 6 {
+		return 6;
+	}
+
 	public language: number;
 	public firstCode: number;
 	public glyphIndexArray: number[];

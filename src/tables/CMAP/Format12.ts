@@ -10,6 +10,13 @@ export interface Format12Parameters extends CMAPSubTableParameters {
 
 export class Format12 extends CMAPSubTable {
 
+	/**
+	 * Format number is set to 12
+	 */
+	public get format(): 12 {
+		return 12;
+	}
+
 	public language: number;
 	public groups: number[];
 	public codeToGID: Map<number, number>;

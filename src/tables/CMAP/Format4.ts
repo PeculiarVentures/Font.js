@@ -1,6 +1,6 @@
 import { SeqStream } from "bytestreamjs";
 import { Glyph } from "../GLYF/Glyph";
-import { CMAPSubTable, CMAPSubTableParameters } from "./CMAPSubTable";
+import { CMAPLanguage, CMAPSubTable, CMAPSubTableParameters } from "./CMAPSubTable";
 
 interface Information {
 	start: number | null;
@@ -18,12 +18,23 @@ export interface Segment {
 }
 
 export interface Format4Parameters extends CMAPSubTableParameters {
+	format?: 4;
 	language?: number;
 	segments?: Segment[];
 }
 
-export class Format4 extends CMAPSubTable {
+/**
+ * Representation of Format 4. Segment mapping to delta values
+ * @see https://docs.microsoft.com/en-us/typography/opentype/spec/cmap#format-4-segment-mapping-to-delta-values
+ */
+export class Format4 extends CMAPSubTable implements CMAPLanguage {
 
+	/**
+	 * Format number is set to 4
+	 */
+	public get format(): 4 {
+		return 4;
+	}
 	public language: number;
 	public segments: Segment[];
 
@@ -162,6 +173,7 @@ export class Format4 extends CMAPSubTable {
 		//#region Finally append information about "format = 1" segments
 		stream.appendView(new Uint8Array(format1Stream.buffer));
 		//#endregion
+
 		return true;
 	}
 
@@ -169,16 +181,14 @@ export class Format4 extends CMAPSubTable {
 		//#region Read major information
 		stream.getUint16(); // length
 
-		const language = stream.getUint16();
-		const segCountX2 = stream.getUint16();
+		const language = stream.getUint16(); // language
+		const segCountX2 = stream.getUint16(); // segCountX2
 		const segCount = segCountX2 >> 1;
 		stream.getUint16(); // searchRange
 		stream.getUint16(); // entrySelector
 		stream.getUint16(); // rangeShift
-
-
-
 		//#endregion
+
 		//#region Initialize "endCode" array
 		const endCode: number[] = [];
 
@@ -187,8 +197,8 @@ export class Format4 extends CMAPSubTable {
 			endCode.push(code);
 		}
 		//#endregion
-		stream.getUint16(); // reservedPad
 
+		stream.getUint16(); // reservedPad
 
 		//#region Initialize "startCode" array
 		const startCode: number[] = [];
@@ -198,6 +208,7 @@ export class Format4 extends CMAPSubTable {
 			startCode.push(code);
 		}
 		//#endregion
+
 		//#region Initialize "idDelta" array
 		const idDelta = [];
 
@@ -206,6 +217,7 @@ export class Format4 extends CMAPSubTable {
 			idDelta.push(code);
 		}
 		//#endregion
+
 		//#region Initialize "idRangeOffset" array
 		const idRangeTableOffset = stream.start;
 
@@ -216,6 +228,7 @@ export class Format4 extends CMAPSubTable {
 			idRangeOffset.push(code);
 		}
 		//#endregion
+
 		//#region Combine all segment's data and calculate glyph's indexes
 		const segments: Segment[] = [];
 
@@ -260,6 +273,7 @@ export class Format4 extends CMAPSubTable {
 			});
 		}
 		//#endregion
+
 		return new Format4({
 			language,
 			segments
@@ -332,15 +346,14 @@ export class Format4 extends CMAPSubTable {
 
 	public gid(code: number): number {
 		// Replace absent chars via GID = 0 (as it is required by standard)
-		let result = 0;
-
 		for (const segment of this.segments) {
-			result = segment.codeToGID.get(code) || 0;
-			if (typeof result !== "undefined")
-				break;
+			const result = segment.codeToGID.get(code);
+			if (result) {
+				return result;
+			}
 		}
 
-		return (result || 0);
+		return 0;
 	}
 
 	public code(gid: number): number[] {

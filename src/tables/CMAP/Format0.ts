@@ -3,15 +3,26 @@ import { Glyph } from "../GLYF/Glyph";
 import { CMAPLanguage, CMAPSubTable, CMAPSubTableParameters } from "./CMAPSubTable";
 
 export interface Format0Parameters extends CMAPSubTableParameters {
-	format?: 0;
 	language?: number;
 	glyphIndexArray?: number[];
 }
 
+/**
+ * Representation of Format 0. Byte encoding table
+ * @see https://docs.microsoft.com/en-us/typography/opentype/spec/cmap#format-0-byte-encoding-table
+ */
 export class Format0 extends CMAPSubTable implements CMAPLanguage {
 
-	public readonly format: 0 = 0;
+	/**
+	 * Format number is set to 0
+	 */
+	public get format(): 0 {
+		return 0;
+	}
 	public language: number;
+	/**
+	 * An array that maps character codes to glyph index values
+	 */
 	public glyphIndexArray: number[];
 
 	constructor(parameters: Format0Parameters = {}) {
@@ -21,13 +32,13 @@ export class Format0 extends CMAPSubTable implements CMAPLanguage {
 		this.glyphIndexArray = parameters.glyphIndexArray || [];
 	}
 
-	static get className() {
+	public static get className() {
 		return "Format0";
 	}
 
 	public toStream(stream: SeqStream): boolean {
 		stream.appendUint16(this.format); // format
-		stream.appendUint16(262); // TODO Fixed value? // length
+		stream.appendUint16(262); // length (format(2) + length(2) + language(2) + glyphIdArray[256])
 		stream.appendUint16(this.language); // language
 
 		stream.appendView(new Uint8Array(this.glyphIndexArray)); // glyphIdArray[256]
@@ -36,14 +47,20 @@ export class Format0 extends CMAPSubTable implements CMAPLanguage {
 	}
 
 	public static fromStream(stream: SeqStream) {
-		stream.getUint16(); // length
-		const language = stream.getUint16();
+		const length = stream.getUint16(); // length
+		const language = stream.getUint16(); // language
 
+		const glyphIndexArraySize = length - 6;
 		const glyphIndexArray: number[] = [];
 
-		for (let j = 0; j < 256; j++) {
+		// The glyph set is limited to 256.
+		// Note that if this format is used to index into a larger glyph set,
+		// only the first 256 glyphs will be accessible.
+		for (let j = 0; j < glyphIndexArraySize; j++) {
 			const glyphIndex = (stream.getBlock(1))[0];
-			glyphIndexArray.push(glyphIndex);
+			if (j < 256) {
+				glyphIndexArray.push(glyphIndex);
+			}
 		}
 
 		return new Format0({
@@ -58,7 +75,10 @@ export class Format0 extends CMAPSubTable implements CMAPLanguage {
 	 * @param glyphs Array of glyphs
 	 */
 	static fromGlyphs(language: number, glyphs: Glyph[]) {
-		return new Format0();
+		return new Format0({
+			language,
+			// TODO glyphIndexArray: ???
+		});
 	}
 
 }

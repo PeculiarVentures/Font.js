@@ -26,6 +26,13 @@ export interface Format14Parameters extends CMAPSubTableParameters {
 
 export class Format14 extends CMAPSubTable {
 
+	/**
+	 * Format number is set to 14
+	 */
+	public get format(): 14 {
+		return 14;
+	}
+
 	public varSelectorRecords: VarSelectorRecord[];
 
 	constructor(parameters: Format14Parameters = {}) {

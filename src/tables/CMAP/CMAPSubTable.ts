@@ -1,8 +1,7 @@
 import { BaseClass } from "../../BaseClass";
 
 export interface CMAPSubTableParameters {
-	format?: number;
-	platformID?: PlatformIDs;
+	platformID?: CMAPPlatformIDs;
 	platformSpecificID?: number;
 }
 
@@ -10,7 +9,7 @@ export interface CMAPSubTableParameters {
  * Platform IDs
  * @see https://docs.microsoft.com/en-us/typography/opentype/spec/cmap#platform-ids
  */
-export enum PlatformIDs {
+export enum CMAPPlatformIDs {
 	/**
 	 * Various
 	 */
@@ -36,21 +35,24 @@ export enum PlatformIDs {
 
 /**
  * Represents CMAP subtable with language field
- * @see https://docs.microsoft.com/en-us/typography/opentype/spec/cmap#use-of-the-language-field-in-cmap-subtables
  */
 export interface CMAPLanguage {
+	/**
+	 * Language number
+	 * @see https://docs.microsoft.com/en-us/typography/opentype/spec/cmap#use-of-the-language-field-in-cmap-subtables
+	 */
 	language: number;
 }
 
 /**
  * Representation of EncodingRecord
  */
-export class CMAPSubTable extends BaseClass {
+export abstract class CMAPSubTable extends BaseClass {
 
 	/**
 	 * Platform ID
 	 */
-	public platformID: PlatformIDs;
+	public platformID: CMAPPlatformIDs;
 	/**
 	 * Platform-specific encoding ID
 	 */
@@ -58,14 +60,13 @@ export class CMAPSubTable extends BaseClass {
 	/**
 	 * Format number of CMAP subtable
 	 */
-	public format: number;
+	public abstract readonly format: number;
 
 	constructor(parameters: CMAPSubTableParameters = {}) {
 		super();
 
-		this.platformID = parameters.platformID || PlatformIDs.Unicode;
+		this.platformID = parameters.platformID || CMAPPlatformIDs.Unicode;
 		this.platformSpecificID = parameters.platformSpecificID || 0;
-		this.format = parameters.format || 0;
 	}
 
 	public static get className(): string {
