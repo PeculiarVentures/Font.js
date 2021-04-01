@@ -25,7 +25,7 @@ context("LOCA", () => {
       });
       const stream = new SeqStream();
       table.toStream(stream);
-      assert.strictEqual(Buffer.from(stream.buffer).toString("hex"), "0000004c004c004c01b0");
+      assert.strictEqual(Buffer.from(stream.buffer).toString("hex"), "0000000000000098000000980000009800000360");
       const parsedTable = font.Tables.LOCA.fromStream(new SeqStream({ buffer: stream.buffer }), font.Tables.LOCAFormat.long, 4);
       assert.deepStrictEqual(parsedTable, Object.assign(table, { offsets: [0, 152, 152, 152, 864] }));
     });
