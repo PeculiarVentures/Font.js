@@ -4,39 +4,134 @@ import { FontTable } from "../Table";
 import { Glyph, SimpleGlyph, CompoundGlyph } from "./GLYF";
 
 export interface MAXPParameters {
+	/**
+	 * Version
+	 */
 	version?: number;
+	/**
+	 * The number of glyphs in the font
+	 */
 	numGlyphs?: number;
+	/**
+	 * Maximum points in a non-composite glyph
+	 */
 	maxPoints?: number;
+	/**
+	 * Maximum contours in a non-composite glyph
+	 */
 	maxContours?: number;
+	/**
+	 * Maximum points in a composite glyph
+	 */
 	maxComponentPoints?: number;
+	/**
+	 * Maximum contours in a composite glyph
+	 */
 	maxComponentContours?: number;
+	/**
+	 * 1 if instructions do not use the twilight zone (Z0), or 2 if instructions do use Z0; should be set to 2 in most cases
+	 */
 	maxZones?: number;
+	/**
+	 * Maximum points used in Z0
+	 */
 	maxTwilightPoints?: number;
+	/**
+	 * Number of Storage Area locations
+	 */
 	maxStorage?: number;
+	/**
+	 * Number of FDEFs, equal to the highest function number + 1
+	 */
 	maxFunctionDefs?: number;
+	/**
+	 * Number of IDEFs
+	 */
 	maxInstructionDefs?: number;
+	/**
+	 * Maximum stack depth across Font Program ('fpgm' table), CVT Program ('prep' table) and all glyph instructions (in the 'glyf' table)
+	 */
 	maxStackElements?: number;
+	/**
+	 * Maximum byte count for glyph instructions
+	 */
 	maxSizeOfInstructions?: number;
+	/**
+	 * Maximum number of components referenced at “top level” for any composite glyph
+	 */
 	maxComponentElements?: number;
+	/**
+	 * Maximum levels of recursion; 1 for simple components
+	 */
 	maxComponentDepth?: number;
+
 	glyphs?: Glyph[];
 }
 
-export class MAXP extends FontTable {
+/**
+ * Represents MAXP table. This table establishes the memory requirements for this font
+ * @see https://docs.microsoft.com/en-us/typography/opentype/spec/maxp
+ */
+export class MAXP extends FontTable { // TODO Split to versions
+	/**
+	 * Version
+	 */
 	public version: number;
+	/**
+	 * The number of glyphs in the font
+	 */
 	public numGlyphs: number;
+	/**
+	 * Maximum points in a non-composite glyph
+	 */
 	public maxPoints?: number;
+	/**
+	 * Maximum contours in a non-composite glyph
+	 */
 	public maxContours?: number;
+	/**
+	 * Maximum points in a composite glyph
+	 */
 	public maxComponentPoints?: number;
+	/**
+	 * Maximum contours in a composite glyph
+	 */
 	public maxComponentContours?: number;
+	/**
+	 * 1 if instructions do not use the twilight zone (Z0), or 2 if instructions do use Z0; should be set to 2 in most cases
+	 */
 	public maxZones?: number;
+	/**
+	 * Maximum points used in Z0
+	 */
 	public maxTwilightPoints?: number;
+	/**
+	 * Number of Storage Area locations
+	 */
 	public maxStorage?: number;
+	/**
+	 * Number of FDEFs, equal to the highest function number + 1
+	 */
 	public maxFunctionDefs?: number;
+	/**
+	 * Number of IDEFs
+	 */
 	public maxInstructionDefs?: number;
+	/**
+	 * Maximum stack depth across Font Program ('fpgm' table), CVT Program ('prep' table) and all glyph instructions (in the 'glyf' table)
+	 */
 	public maxStackElements?: number;
+	/**
+	 * Maximum byte count for glyph instructions
+	 */
 	public maxSizeOfInstructions?: number;
+	/**
+	 * Maximum number of components referenced at “top level” for any composite glyph
+	 */
 	public maxComponentElements?: number;
+	/**
+	 * Maximum levels of recursion; 1 for simple components
+	 */
 	public maxComponentDepth?: number;
 
 	constructor(parameters: MAXPParameters = {}) {
@@ -86,7 +181,7 @@ export class MAXP extends FontTable {
 		const referencedGlyphs = new Map();
 
 		//#region Aux function calculating values for composite glyphs
-		const calculateCompositeGlyph = (glyph: Glyph, depth: number) => { // TODO extract aux function
+		function calculateCompositeGlyph(glyph: Glyph, depth: number) {
 			const result = {
 				componentContours: 0,
 				componentPoints: 0,
@@ -136,7 +231,7 @@ export class MAXP extends FontTable {
 			}
 
 			return result;
-		};
+		}
 		//#endregion
 
 		//#region Major loop
