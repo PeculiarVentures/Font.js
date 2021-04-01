@@ -2,43 +2,148 @@ import { SeqStream } from "bytestreamjs";
 import { FontTable } from "../Table";
 
 export interface HHEAParameters {
+	/**
+	 * version number of the horizontal header table
+	 */
 	version?: number;
+	/**
+	 * Typographic ascent
+	 */
 	ascent?: number;
+	/**
+	 * Typographic descent
+	 */
 	descent?: number;
+	/**
+	 * Typographic line gap
+	 */
 	lineGap?: number;
+	/**
+	 * Maximum advance width value in 'hmtx' table
+	 */
 	advanceWidthMax?: number;
+	/**
+	 * Minimum left sidebearing value in 'hmtx' table for glyphs with contours (empty glyphs should be ignored)
+	 */
 	minLeftSideBearing?: number;
+	/**
+	 * Minimum right sidebearing value; calculated as min(aw - (lsb + xMax - xMin)) for glyphs with contours (empty glyphs should be ignored)
+	 */
 	minRightSideBearing?: number;
+	/**
+	 * Max(lsb + (xMax - xMin))
+	 */
 	xMaxExtent?: number;
+	/**
+	 * Used to calculate the slope of the cursor (rise/run); 1 for vertical
+	 */
 	caretSlopeRise?: number;
+	/**
+	 * 0 for vertical
+	 */
 	caretSlopeRun?: number;
+	/**
+	 * The amount by which a slanted highlight on a glyph needs to be shifted to produce the best appearance. Set to 0 for non-slanted fonts
+	 */
 	caretOffset?: number;
+	/**
+	 * set to 0
+	 */
 	reserved1?: number;
+	/**
+	 * set to 0
+	 */
 	reserved2?: number;
+	/**
+	 * set to 0
+	 */
 	reserved3?: number;
+	/**
+	 * set to 0
+	 */
 	reserved4?: number;
+	/**
+	 * 0 for current format
+	 */
 	metricDataFormat?: number;
+	/**
+	 * Number of hMetric entries in 'hmtx' table
+	 */
 	numOfLongHorMetrics?: number;
 }
-
+/**
+ * Representation of HEAD table. Horizontal Header Table. This table contains information for horizontal layout
+ * @see https://docs.microsoft.com/en-us/typography/opentype/spec/hhea
+ */
 export class HHEA extends FontTable {
 
+	/**
+	 * version number of the horizontal header table
+	 */
 	public version: number;
+	/**
+	 * Typographic ascent
+	 */
 	public ascent: number;
-	public descent: number;
+	/**
+	 * Typographic descent
+	 */
+	public descent: number
+	/**
+	 * Typographic line gap */;
 	public lineGap: number;
+	/**
+	 * Maximum advance width value in 'hmtx' table
+	 */
 	public advanceWidthMax: number;
+	/**
+	 * Minimum left sidebearing value in 'hmtx' table for glyphs with contours (empty glyphs should be ignored)
+	 */
 	public minLeftSideBearing: number;
+	/**
+	 * Minimum right sidebearing value; calculated as min(aw - (lsb + xMax - xMin)) for glyphs with contours (empty glyphs should be ignored)
+	 */
 	public minRightSideBearing: number;
+	/**
+	 * Max(lsb + (xMax - xMin))
+	 */
 	public xMaxExtent: number;
+	/**
+	 * Used to calculate the slope of the cursor (rise/run); 1 for vertical
+	 */
 	public caretSlopeRise: number;
+	/**
+	 * 0 for vertical
+	 */
 	public caretSlopeRun: number;
+	/**
+	 * The amount by which a slanted highlight on a glyph needs to be shifted to produce the best appearance. Set to 0 for non-slanted fonts
+	 */
 	public caretOffset: number;
+	/**
+	 * set to 0
+	 */
 	public reserved1: number;
+	/**
+	 * set to 0
+	 */
 	public reserved2: number;
+	/**
+	 * set to 0
+	 */
 	public reserved3: number;
+	/**
+	 * set to 0
+	 */
 	public reserved4: number;
+
+	/**
+	 * 0 for current format
+	 */
 	public metricDataFormat: number;
+	/**
+	 * Number of hMetric entries in 'hmtx' table
+	 */
 	public numOfLongHorMetrics: number;
 
 
