@@ -260,7 +260,7 @@ export class CompoundGlyph extends Glyph {
 	}
 
 	public get components() {
-		if ("_components" in this) {
+		if (!this._components) {
 			this.decode();
 		}
 
@@ -272,7 +272,7 @@ export class CompoundGlyph extends Glyph {
 	}
 
 	get instructions() {
-		if ("_instructions" in this)
+		if (!this._instructions)
 			this.decode();
 
 		return this._instructions;
