@@ -10,7 +10,7 @@
     }
   ],
   "name": "fontjs",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "FontJS (Font.js) is a packages for TrueType font parsing and manipulation",
   "jsnext:main": "./src/index.js",
   "module": "./src/index.js",
