@@ -2,18 +2,40 @@ import { SeqStream } from "bytestreamjs";
 import { FontTable } from "../Table";
 
 export interface HMTXMetrix {
+	/**
+	 * Advance width, in font design units
+	 */
 	advanceWidth: number;
+	/**
+	 * Glyph left side bearing, in font design units
+	 */
 	leftSideBearing: number;
 }
 
 export interface HMTXParameters {
+	/**
+	 * Paired advance width and left side bearing values for each glyph. Records are indexed by glyph ID
+	 */
 	hMetrics?: HMTXMetrix[];
+	/**
+	 * Left side bearings for glyph IDs greater than or equal to numberOfHMetrics
+	 */
 	leftSideBearings?: number[];
 }
 
+/**
+ * Represents HMTX table. Horizontal Metrics Table
+ * @see https://docs.microsoft.com/en-us/typography/opentype/spec/hmtx
+ */
 export class HMTX extends FontTable {
 
+	/**
+	 * Paired advance width and left side bearing values for each glyph. Records are indexed by glyph ID
+	 */
 	public hMetrics: HMTXMetrix[];
+	/**
+	 * Left side bearings for glyph IDs greater than or equal to numberOfHMetrics
+	 */
 	public leftSideBearings: number[];
 
 	constructor(parameters: HMTXParameters = {}) {
@@ -28,13 +50,14 @@ export class HMTX extends FontTable {
 	}
 
 	public toStream(stream: SeqStream) {
-		for (let i = 0; i < this.hMetrics.length; i++) {
-			stream.appendUint16(this.hMetrics[i].advanceWidth);
-			stream.appendInt16(this.hMetrics[i].leftSideBearing);
+		for (const hMetric of this.hMetrics) {
+			stream.appendUint16(hMetric.advanceWidth);
+			stream.appendInt16(hMetric.leftSideBearing);
 		}
 
-		for (let i = 0; i < this.leftSideBearings.length; i++)
-			stream.appendInt16(this.leftSideBearings[i]);
+		for (const leftSideBearing of this.leftSideBearings) {
+			stream.appendInt16(leftSideBearing);
+		}
 
 		return true;
 	}
