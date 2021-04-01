@@ -1,6 +1,6 @@
-import * as asn1js from "../../asn1js/asn1.js";
-import * as pkijs from "../../pkijs/index.js";
-import { SeqStream } from "../../bytestreamjs/bytestream.js";
+import * as asn1js from "asn1js";
+import * as pkijs from "pkijs";
+import { SeqStream } from "bytestreamjs";
 import { BaseClass } from "../BaseClass.js";
 //**************************************************************************************
 export class DSIG extends BaseClass

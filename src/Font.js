@@ -1,4 +1,4 @@
-import { SeqStream } from "../bytestreamjs/bytestream.js";
+import { SeqStream } from "bytestreamjs";
 import { unicodePointsToCodePoints, stringToCodePoints } from "./common.js";
 import { BaseClass } from "./BaseClass.js";
 import * as Tables from "./Tables.js";
