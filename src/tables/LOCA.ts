@@ -1,15 +1,33 @@
 import { SeqStream } from "bytestreamjs";
 import { FontTable } from "../Table";
 
-export interface LOCAParameters {
-	offsets?: number[];
-	indexToLocFormat?: number;
+export enum LOCAFormat {
+	short = 0,
+	long = 1,
 }
 
+export interface LOCAParameters {
+	/**
+	 * The actual local offset divided by 2 is stored. The value of n is numGlyphs + 1. The value for numGlyphs is found in the 'maxp' table
+	 */
+	offsets?: number[];
+	indexToLocFormat?: LOCAFormat;
+}
+
+/**
+ * Represents LOCA table
+ * @see https://docs.microsoft.com/en-us/typography/opentype/spec/loca
+ */
 export class LOCA extends FontTable {
 
+	/**
+	 * The actual local offset divided by 2 is stored. The value of n is numGlyphs + 1. The value for numGlyphs is found in the 'maxp' table
+	 */
 	public offsets: number[];
-	public indexToLocFormat: number;
+	/**
+	 * Format of the offset values
+	 */
+	public indexToLocFormat: LOCAFormat; // TODO rename to format
 
 	constructor(parameters: LOCAParameters = {}) {
 		super();
@@ -46,9 +64,8 @@ export class LOCA extends FontTable {
 	 * @param stream
 	 * @param indexToLocFormat Value from 'head' table
 	 * @param numGlyphs Value from 'maxp' table
-	 * @returns Result of the function
 	 */
-	static fromStream(stream: SeqStream, indexToLocFormat: number, numGlyphs: number): LOCA {
+	static fromStream(stream: SeqStream, indexToLocFormat: LOCAFormat, numGlyphs: number): LOCA {
 		const offsets: number[] = [];
 
 		switch (indexToLocFormat) {
