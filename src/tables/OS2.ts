@@ -1,88 +1,472 @@
 import { SeqStream } from "bytestreamjs";
 import { FontTable } from "../Table";
 
-export interface OS2Parameters {
-	version?: number;
-	xAvgCharWidth?: number;
-	usWeightClass?: number;
-	usWidthClass?: number;
-	fsType?: number;
-	ySubscriptXSize?: number;
-	ySubscriptYSize?: number;
-	ySubscriptXOffset?: number;
-	ySubscriptYOffset?: number;
-	ySuperscriptXSize?: number;
-	ySuperscriptYSize?: number;
-	ySuperscriptXOffset?: number;
-	ySuperscriptYOffset?: number;
-	yStrikeoutSize?: number;
-	yStrikeoutPosition?: number;
-	sFamilyClass?: number;
-	panose?: Uint8Array;
-	ulUnicodeRange1?: number;
-	ulUnicodeRange2?: number;
-	ulUnicodeRange3?: number;
-	ulUnicodeRange4?: number;
-	achVendID?: number;
-	fsSelection?: number;
-	usFirstCharIndex?: number;
-	usLastCharIndex?: number;
-	sTypoAscender?: number;
-	sTypoDescender?: number;
-	sTypoLineGap?: number;
-	usWinAscent?: number;
-	usWinDescent?: number;
-	ulCodePageRange1?: number;
-	ulCodePageRange2?: number;
-	sxHeight?: number;
-	sCapHeight?: number;
-	usDefaultChar?: number;
-	usBreakChar?: number;
-	usMaxContext?: number;
-	usLowerOpticalPointSize?: number;
-	usUpperOpticalPointSize?: number;
+export enum OS2Weight {
+	/**
+	 * Thin
+	 */
+	thin = 100,
+	/**
+	 * Extra-light (Ultra-light)
+	 */
+	extraLight = 200,
+	/**
+	 * Light
+	 */
+	light = 300,
+	/**
+	 * Normal (Regular)
+	 */
+	normal = 400,
+	/**
+	 * Medium
+	 */
+	medium = 500,
+	/**
+	 * Semi-bold (Demi-bold)
+	 */
+	semiBold = 600,
+	/**
+	 * Bold
+	 */
+	bold = 700,
+	/**
+	 * Extra-bold (Ultra-bold)
+	 */
+	extrabold = 800,
+	/**
+	 * Black (Heavy)
+	 */
+	black = 900,
+}
 
+export enum OS2Width {
+	/**
+	 * Ultra-condensed. 50% of normal
+	 */
+	ultraCondensed = 1,
+	/**
+	 * Extra-condensed. 62.5% of normal
+	 */
+	extraCondensed = 2,
+	/**
+	 * Condensed. 75% of normal
+	 */
+	condensed = 3,
+	/**
+	 * Semi-condensed. 87.5% of normal
+	 */
+	semiCondensed = 4,
+	/**
+	 * Medium (normal). 100% of normal
+	 */
+	normal = 5,
+	/**
+	 * Semi-expanded. 112.5% of normal
+	 */
+	semiExpanded = 6,
+	/**
+	 * Expanded. 125% of normal
+	 */
+	expanded = 7,
+	/**
+	 * Extra-expanded. 150% of normal
+	 */
+	extraExpanded = 8,
+	/**
+	 * Ultra-expanded. 200% of normal
+	 */
+	ultraExpanded = 9,
+}
+
+export enum OS2TypeFlags {
+	/**
+	 * @deprecated
+	 */
+	installableEmbedding = 0x0001,
+	restrictedLicenseEmbedding = 0x0002,
+	previewPrintEmbedding = 0x0004,
+	editableEmbedding = 0x0008,
+	//#region Reserved
+	// 0x0010
+	// 0x0020
+	// 0x0040
+	// 0x0080
+	//#endregion
+	noSubsetting = 0x0100,
+	bitmapEmbeddingOnly = 0x0200,
+	//#region Reserved
+	// 0x0400
+	// 0x0800
+	// 0x1000
+	// 0x2000
+	// 0x4000
+	// 0x8000
+	//#endregion
+}
+/**
+ * Font-family class
+ * @see https://docs.microsoft.com/en-us/typography/opentype/spec/ibmfc
+ */
+export enum OS2Family {
+	none = 0,
+	oldstyleSerifs = 1,
+	transitionalSerifs = 2,
+	modernSerifs = 3,
+	clarendonSerifs = 4,
+	slabSerifs = 5,
+	// 6, Reserved
+	freeformSerifs = 7,
+	sansSerif = 8,
+	ornamentals = 9,
+	scripts = 10,
+	// 11, Reserved
+	symbolic = 12,
+	// 13, Reserved
+	// 14, Reserved
+}
+
+/**
+ * Font selection flags
+ * @see https://docs.microsoft.com/en-us/typography/opentype/spec/os2#fsselection
+ */
+export enum OS2SelectionFlags {
+	italic = 0x0001,
+	underscore = 	0x0002,
+	negative = 0x0004,
+	outlined = 0x0008,
+	strikeout = 0x0010,
+	bold = 0x0020,
+	regular = 0x0040,
+	useTypoMetrics = 0x0080,
+	wws = 0x0100,
+	oblique = 0x0200,
+	//#region Reserved
+	// 0x0400,
+	// 0x0800,
+	// 0x1000,
+	// 0x2000,
+	// 0x4000,
+	// 0x8000,
+	//#endregion
+}
+
+export interface OS2Parameters {
+	/**
+	 * The version number for the OS/2 table: 0x0000 to 0x0005
+	 */
+	version?: number;
+	/**
+	 * The Average Character Width parameter specifies the arithmetic average of the escapement (width) of all non-zero width glyphs in the font
+	 */
+	xAvgCharWidth?: number;
+	/**
+	 * Indicates the visual weight (degree of blackness or thickness of strokes) of the characters in the font. Values from 1 to 1000 are valid
+	 */
+	usWeightClass?: OS2Weight;
+	/**
+	 * Indicates a relative change from the normal aspect ratio (width to height ratio) as specified by a font designer for the glyphs in a font
+	 */
+	usWidthClass?: OS2Width;
+	/**
+	 * Indicates font embedding licensing rights for the font
+	 */
+	fsType?: OS2TypeFlags;
+	/**
+	 * The recommended horizontal size in font design units for subscripts for this font
+	 */
+	ySubscriptXSize?: number;
+	/**
+	 * The recommended vertical size in font design units for subscripts for this font
+	 */
+	ySubscriptYSize?: number;
+	/**
+	 * The recommended horizontal offset in font design units for subscripts for this font
+	 */
+	ySubscriptXOffset?: number;
+	/**
+	 * The recommended vertical offset in font design units from the baseline for subscripts for this font
+	 */
+	ySubscriptYOffset?: number;
+	/**
+	 * The recommended horizontal size in font design units for superscripts for this font
+	 */
+	ySuperscriptXSize?: number;
+	/**
+	 * The recommended vertical size in font design units for superscripts for this font
+	 */
+	ySuperscriptYSize?: number;
+	/**
+	 * The recommended horizontal offset in font design units for superscripts for this font
+	 */
+	ySuperscriptXOffset?: number;
+	/**
+	 * The recommended vertical offset in font design units from the baseline for superscripts for this font
+	 */
+	ySuperscriptYOffset?: number;
+	/**
+	 * Thickness of the strikeout stroke in font design units
+	 */
+	yStrikeoutSize?: number;
+	/**
+	 * The position of the top of the strikeout stroke relative to the baseline in font design units
+	 */
+	yStrikeoutPosition?: number;
+	/**
+	 * This parameter is a classification of font-family design
+	 */
+	sFamilyClass?: OS2Family;
+	/**
+	 * This 10-byte series of numbers is used to describe the visual characteristics of a given typeface
+	 */
+	panose?: Uint8Array;
+	/**
+	 * Unicode Character Range
+	 */
+	ulUnicodeRange1?: number;
+	/**
+	 * Unicode Character Range
+	 */
+	ulUnicodeRange2?: number;
+	/**
+	 * Unicode Character Range
+	 */
+	ulUnicodeRange3?: number;
+	/**
+	 * Unicode Character Range
+	 */
+	ulUnicodeRange4?: number;
+	/**
+	 * The four-character identifier for the vendor of the given type face
+	 */
+	achVendID?: number;
+	/**
+	 * Contains information concerning the nature of the font patterns
+	 */
+	fsSelection?: OS2SelectionFlags;
+	/**
+	 * The minimum Unicode index (character code) in this font, according to the 'cmap' subtable for platform ID 3 and platform- specific encoding ID 0 or 1
+	 */
+	usFirstCharIndex?: number;
+	/**
+	 * The maximum Unicode index (character code) in this font, according to the 'cmap' subtable for platform ID 3 and encoding ID 0 or 1
+	 */
+	usLastCharIndex?: number;
+	/**
+	 * The typographic ascender for this font
+	 */
+	sTypoAscender?: number;
+	/**
+	 * The typographic descender for this font
+	 */
+	sTypoDescender?: number;
+	/**
+	 * The typographic line gap for this font
+	 */
+	sTypoLineGap?: number;
+	/**
+	 * The “Windows ascender” metric
+	 */
+	usWinAscent?: number;
+	/**
+	 * The “Windows descender” metric
+	 */
+	usWinDescent?: number;
+	/**
+	 * Code Page Character Range
+	 */
+	ulCodePageRange1?: number;
+	/**
+	 * Code Page Character Range
+	 */
+	ulCodePageRange2?: number;
+	/**
+	 * This metric specifies the distance between the baseline and the approximate height of non-ascending lowercase letters measured in FUnits
+	 */
+	sxHeight?: number;
+	/**
+	 * This metric specifies the distance between the baseline and the approximate height of uppercase letters measured in FUnits
+	 */
+	sCapHeight?: number;
+	/**
+	 * This is the Unicode code point, in UTF-16 encoding, of a character that can be used for a default glyph if a requested character is not supported in the font
+	 */
+	usDefaultChar?: number;
+	/**
+	 * This is the Unicode code point, in UTF-16 encoding, of a character that can be used as a default break character
+	 */
+	usBreakChar?: number;
+	/**
+	 * The maximum length of a target glyph context for any feature in this font
+	 */
+	usMaxContext?: number;
+	/**
+	 * This field is used for fonts with multiple optical styles
+	 */
+	usLowerOpticalPointSize?: number;
+	/**
+	 * This field is used for fonts with multiple optical styles
+	 */
+	usUpperOpticalPointSize?: number;
 }
 
 export class OS2 extends FontTable { // TODO should be split into version classes
+	/**
+	 * The version number for the OS/2 table: 0x0000 to 0x0005
+	 */
 	version: number;
+	/**
+	 * The Average Character Width parameter specifies the arithmetic average of the escapement (width) of all non-zero width glyphs in the font
+	 */
 	xAvgCharWidth: number;
-	usWeightClass: number;
-	usWidthClass: number;
-	fsType: number;
+	/**
+	 * Indicates the visual weight (degree of blackness or thickness of strokes) of the characters in the font. Values from 1 to 1000 are valid
+	 */
+	usWeightClass: OS2Weight;
+	/**
+	 * Indicates a relative change from the normal aspect ratio (width to height ratio) as specified by a font designer for the glyphs in a font
+	 */
+	usWidthClass: OS2Width;
+	/**
+	 * Indicates font embedding licensing rights for the font
+	 */
+	fsType: OS2TypeFlags;
+	/**
+	 * The recommended horizontal size in font design units for subscripts for this font
+	 */
 	ySubscriptXSize: number;
+	/**
+	 * The recommended vertical size in font design units for subscripts for this font
+	 */
 	ySubscriptYSize: number;
+	/**
+	 * The recommended horizontal offset in font design units for subscripts for this font
+	 */
 	ySubscriptXOffset: number;
+	/**
+	 * The recommended vertical offset in font design units from the baseline for subscripts for this font
+	 */
 	ySubscriptYOffset: number;
+	/**
+	 * The recommended horizontal size in font design units for superscripts for this font
+	 */
 	ySuperscriptXSize: number;
+	/**
+	 * The recommended vertical size in font design units for superscripts for this font
+	 */
 	ySuperscriptYSize: number;
+	/**
+	 * The recommended horizontal offset in font design units for superscripts for this font
+	 */
 	ySuperscriptXOffset: number;
+	/**
+	 * The recommended vertical offset in font design units from the baseline for superscripts for this font
+	 */
 	ySuperscriptYOffset: number;
+	/**
+	 * Thickness of the strikeout stroke in font design units
+	 */
 	yStrikeoutSize: number;
+	/**
+	 * The position of the top of the strikeout stroke relative to the baseline in font design units
+	 */
 	yStrikeoutPosition: number;
-	sFamilyClass: number;
-	panose: Uint8Array;
+	/**
+	 * This parameter is a classification of font-family design
+	 */
+	sFamilyClass: OS2Family;
+	/**
+	 * This 10-byte series of numbers is used to describe the visual characteristics of a given typeface
+	 * @see https://docs.microsoft.com/en-us/typography/opentype/spec/os2#panose
+	 */
+	panose: Uint8Array; // TODO Use structure
+	/**
+	 * Unicode Character Range
+	 */
 	ulUnicodeRange1: number;
+	/**
+	 * Unicode Character Range
+	 */
 	ulUnicodeRange2: number;
+	/**
+	 * Unicode Character Range
+	 */
 	ulUnicodeRange3: number;
+	/**
+	 * Unicode Character Range
+	 */
 	ulUnicodeRange4: number;
+	/**
+	 * The four-character identifier for the vendor of the given type face
+	 */
 	achVendID: number;
-	fsSelection: number;
+	/**
+	 * Contains information concerning the nature of the font patterns
+	 */
+	fsSelection: OS2SelectionFlags;
+	/**
+	 * The minimum Unicode index (character code) in this font, according to the 'cmap' subtable for platform ID 3 and platform- specific encoding ID 0 or 1
+	 */
 	usFirstCharIndex: number;
+	/**
+	 * The maximum Unicode index (character code) in this font, according to the 'cmap' subtable for platform ID 3 and encoding ID 0 or 1
+	 */
 	usLastCharIndex: number;
+	/**
+	 * The typographic ascender for this font
+	 */
 	sTypoAscender: number;
+	/**
+	 * The typographic descender for this font
+	 */
 	sTypoDescender: number;
+	/**
+	 * The typographic line gap for this font
+	 */
 	sTypoLineGap: number;
+	/**
+	 * The “Windows ascender” metric
+	 */
 	usWinAscent: number;
+	/**
+	 * The “Windows descender” metric
+	 */
 	usWinDescent: number;
+	/**
+	 * Code Page Character Range
+	 */
 	ulCodePageRange1?: number;
+	/**
+	 * Code Page Character Range
+	 */
 	ulCodePageRange2?: number;
+	/**
+	 * This metric specifies the distance between the baseline and the approximate height of non-ascending lowercase letters measured in FUnits
+	 */
 	sxHeight?: number;
+	/**
+	 * This metric specifies the distance between the baseline and the approximate height of uppercase letters measured in FUnits
+	 */
 	sCapHeight?: number;
+	/**
+	 * This is the Unicode code point, in UTF-16 encoding, of a character that can be used for a default glyph if a requested character is not supported in the font
+	 */
 	usDefaultChar?: number;
+	/**
+	 * This is the Unicode code point, in UTF-16 encoding, of a character that can be used as a default break character
+	 */
 	usBreakChar?: number;
+	/**
+	 * The maximum length of a target glyph context for any feature in this font
+	 */
 	usMaxContext?: number;
+	/**
+	 * This field is used for fonts with multiple optical styles
+	 */
 	usLowerOpticalPointSize?: number;
+	/**
+	 * This field is used for fonts with multiple optical styles
+	 */
 	usUpperOpticalPointSize?: number;
 
 	constructor(parameters: OS2Parameters = {}) {
