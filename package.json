@@ -28,35 +28,23 @@
     "url": "git://github.com/PeculiarVentures/Font.js.git"
   },
   "devDependencies": {
-    "@babel/cli": "^7.0.0",
-    "@babel/core": "^7.0.0",
-    "babel-plugin-istanbul": "latest",
-    "@babel/preset-env": "^7.0.0",
-    "@babel/register": "^7.0.0",
-    "cross-env": "latest",
-    "esdoc": "latest",
-    "esdoc-standard-plugin": "latest",
-    "eslint": "latest",
-    "mocha": "latest",
-    "nyc": "latest",
-    "rollup": "latest",
-    "rollup-plugin-commonjs": "latest",
-    "rollup-plugin-node-builtins": "latest",
+    "@babel/cli": "^7.13.14",
+    "@babel/core": "^7.13.14",
+    "@babel/preset-env": "^7.13.12",
+    "@babel/register": "^7.13.14",
+    "babel-plugin-istanbul": "^6.0.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^7.23.0",
+    "mocha": "^8.3.2",
+    "nyc": "^15.1.0",
+    "rollup": "^2.44.0",
+    "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "4.0.1"
   },
   "dependencies": {
-    "asn1js": "latest",
-    "bytestreamjs": "latest",
-    "pkijs": "latest"
-  },
-  "esdoc": {
-    "source": "./src",
-    "destination": "./docs",
-    "plugins": [
-      {
-        "name": "esdoc-standard-plugin"
-      }
-    ]
+    "asn1js": "^2.1.1",
+    "bytestreamjs": "^1.0.29",
+    "pkijs": "^2.1.94"
   },
   "license": "BSD-3-Clause"
 }
