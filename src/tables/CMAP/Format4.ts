@@ -10,6 +10,7 @@ interface Information {
 	offset?: number;
 }
 
+// TODO Move Segment to class. Add methods to read/write codes and indexes
 export interface Segment {
 	codeToGID: Map<number, number>;
 	gidToCode: Map<number, number>;
@@ -18,6 +19,9 @@ export interface Segment {
 }
 
 export interface Format4Parameters extends CMAPSubTableParameters {
+	/**
+	 * Format number is set to 4
+	 */
 	format?: 4;
 	language?: number;
 	segments?: Segment[];
@@ -242,20 +246,20 @@ export class Format4 extends CMAPSubTable implements CMAPLanguage {
 			const offset = idRangeTableOffset + (i * 2);
 
 			let rangeStream: SeqStream | null = null;
-			if (idRangeOffset[i]) {
+			const id = idRangeOffset[i];
+			if (id) {
 				rangeStream = new SeqStream({
 					stream: stream.stream.slice(
-						offset + idRangeOffset[i],
-						offset + idRangeOffset[i] + ((end - start) << 1) + 2)
+						offset + id,
+						offset + id + ((end - start) << 1) + 2)
 				});
 			}
 			//#endregion
 			for (let j = start; j <= end; j++) {
 				let glyphIndex = 0;
 
-				if (idRangeOffset[i]) {
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-					const value = rangeStream!.getUint16();
+				if (rangeStream) {
+					const value = rangeStream.getUint16();
 					glyphIndex = (value + idDelta[i]) & 0xFFFF;
 				} else {
 					glyphIndex = (j + idDelta[i]) & 0xFFFF;
