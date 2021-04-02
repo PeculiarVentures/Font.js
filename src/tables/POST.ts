@@ -266,34 +266,107 @@ const standardNames = [
 ];
 
 export interface POSTParameters {
+	/**
+	 * Version
+	 *
+	 * - 0x00010000 for version 1.0
+	 * - 0x00020000 for version 2.0
+	 * - 0x00025000 for version 2.5 (deprecated)
+	 * - 0x00030000 for version 3.0
+	 */
 	version?: number;
+	/**
+	 * Italic angle in counter-clockwise degrees from the vertical
+	 */
 	italicAngle?: number;
+	/**
+	 * This is the suggested distance of the top of the underline from the baseline (negative values indicate below baseline)
+	 */
 	underlinePosition?: number;
+	/**
+	 * Suggested values for the underline thickness
+	 */
 	underlineThickness?: number;
+	/**
+	 * Set to 0 if the font is proportionally spaced, non-zero if the font is not proportionally spaced (i.e. monospaced)
+	 */
 	isFixedPitch?: number;
+	/**
+	 * Minimum memory usage when an OpenType font is downloaded
+	 */
 	minMemType42?: number;
+	/**
+	 * Maximum memory usage when an OpenType font is downloaded
+	 */
 	maxMemType42?: number;
+	/**
+	 * Minimum memory usage when an OpenType font is downloaded as a Type 1 font
+	 */
 	minMemType1?: number;
+	/**
+	 * Maximum memory usage when an OpenType font is downloaded as a Type 1 font
+	 */
 	maxMemType1?: number;
+	/**
+	 * Array of indices into the string data. See below for details
+	 */
 	glyphNameIndex?: number[];
 	names?: Uint8Array[];
 	mappedNames?: string[];
 	numberOfGlyphs?: number;
 }
-
+/**
+ * Represents POST table. This table contains additional information needed to use TrueType or OpenType™ fonts on PostScript printers
+ * @see https://docs.microsoft.com/en-us/typography/opentype/spec/post
+ */
 export class POST extends FontTable { // TODO Split into versions
-	version: number;
-	italicAngle: number;
-	underlinePosition: number;
-	underlineThickness: number;
-	isFixedPitch: number;
-	minMemType42: number;
-	maxMemType42: number;
-	minMemType1: number;
-	maxMemType1: number;
-	glyphNameIndex?: number[];
-	names?: Uint8Array[];
-	mappedNames?: string[];
+	/**
+	 * Version
+	 *
+	 * - 0x00010000 for version 1.0
+	 * - 0x00020000 for version 2.0
+	 * - 0x00025000 for version 2.5 (deprecated)
+	 * - 0x00030000 for version 3.0
+	 */
+	public version: number;
+	/**
+	 * Italic angle in counter-clockwise degrees from the vertical
+	 */
+	public italicAngle: number;
+	/**
+	 * This is the suggested distance of the top of the underline from the baseline (negative values indicate below baseline)
+	 */
+	public underlinePosition: number;
+	/**
+	 * Suggested values for the underline thickness
+	 */
+	public underlineThickness: number;
+	/**
+	 * Set to 0 if the font is proportionally spaced, non-zero if the font is not proportionally spaced (i.e. monospaced)
+	 */
+	public isFixedPitch: number;
+	/**
+	 * Minimum memory usage when an OpenType font is downloaded
+	 */
+	public minMemType42: number;
+	/**
+	 * Maximum memory usage when an OpenType font is downloaded
+	 */
+	public maxMemType42: number;
+	/**
+	 * Minimum memory usage when an OpenType font is downloaded as a Type 1 font
+	 */
+	public minMemType1: number;
+	/**
+	 * Maximum memory usage when an OpenType font is downloaded as a Type 1 font
+	 */
+	public maxMemType1: number;
+	/**
+	 * Array of indices into the string data. See below for details
+	 */
+	public glyphNameIndex?: number[];
+	public names?: Uint8Array[];
+	public mappedNames?: string[];
 
 	constructor(parameters: POSTParameters = {}) {
 		super();
