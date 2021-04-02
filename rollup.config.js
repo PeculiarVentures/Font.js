@@ -23,6 +23,7 @@ const main = {
       clean: true,
       tsconfigOverride: {
         compilerOptions: {
+          removeComments: true,
           module: "ES2015",
         }
       },

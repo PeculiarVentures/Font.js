@@ -11,11 +11,11 @@ async function fontTest()
 {
 	const fontFetchResult = await fetch("./fonts/times.ttf");
 	const fontFetchBuffer = await fontFetchResult.arrayBuffer();
-	
+
 	const font = fontjs.Font.fromStream(new SeqStream({ stream: new ByteStream({ buffer: fontFetchBuffer }) }));
-	
+
 	const fontStream = new SeqStream();
-	
+
 	const toStreamResult = font.toStream(fontStream);
 }
 ```

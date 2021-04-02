@@ -6,6 +6,7 @@
   ],
   "extends": [
     "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended"
   ],
   "overrides": [
@@ -15,6 +16,7 @@
         "test/**/*.ts"
       ],
       "rules": {
+        "eol-last": 1,
         "@typescript-eslint/explicit-module-boundary-types": 0,
         "@typescript-eslint/no-explicit-any": 0,
         "newline-before-return": 1,
