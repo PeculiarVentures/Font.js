@@ -262,7 +262,7 @@ export class HEAD extends FontTable {
 		stream.appendUint32(this.fontRevision);
 
 		//#region The "checkSumAdjustment" need to be calculated later in "Font.toStream"
-		stream.appendUint32(this.checkSumAdjustment);
+		stream.appendUint32(0);
 		//#endregion
 
 		stream.appendUint32(this.magicNumber);
