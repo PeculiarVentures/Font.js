@@ -24,18 +24,14 @@ export interface CompoundGlyphParameters extends GlyphParameters {
 
 export class CompoundGlyph extends Glyph {
 
-	private _components?: Component[];
-	private _instructions?: number[];
+	public components!: Component[];
+	public instructions!: number[];
 
 	constructor(parameters: CompoundGlyphParameters = {}) {
 		super(parameters);
 
-		if (parameters.components !== undefined) {
-			this.components = parameters.components;
-		}
-		if (parameters.instructions !== undefined) {
-			this.instructions = parameters.instructions;
-		}
+		this.components ??= parameters.components || [];
+		this.instructions ??= parameters.instructions || [];
 	}
 
 	public static get className() {
@@ -257,29 +253,6 @@ export class CompoundGlyph extends Glyph {
 			e.message = `Failed to execute 'encode' on 'CompoundGlyph. ${e.message}`;
 			throw e;
 		}
-	}
-
-	public get components() {
-		if (!this._components) {
-			this.decode();
-		}
-
-		return this._components;
-	}
-
-	public set components(value: Component[] | undefined) {
-		this._components = value;
-	}
-
-	get instructions() {
-		if (!this._instructions)
-			this.decode();
-
-		return this._instructions;
-	}
-
-	set instructions(value: number[] | undefined) {
-		this._instructions = value;
 	}
 
 }

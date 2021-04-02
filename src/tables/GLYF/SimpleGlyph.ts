@@ -13,27 +13,20 @@ export interface SimpleGlyphParameters extends GlyphParameters {
 
 export class SimpleGlyph extends Glyph {
 
-	public hAdvanceWidth?: number;
-	public leftSideBearing?: number;
-	private _endPtsOfContours?: number[];
-	private _instructions?: number[];
-	private _flags?: number[];
-	private _xCoordinates?: number[];
-	private _yCoordinates?: number[];
+	public endPtsOfContours!: number[];
+	public instructions!: number[];
+	public flags!: number[];
+	public xCoordinates!: number[];
+	public yCoordinates!: number[];
 
 	constructor(parameters: SimpleGlyphParameters = {}) {
 		super(parameters);
 
-		if (parameters.endPtsOfContours !== undefined)
-			this.endPtsOfContours = parameters.endPtsOfContours;
-		if (parameters.instructions !== undefined)
-			this.instructions = parameters.instructions;
-		if (parameters.flags !== undefined)
-			this.flags = parameters.flags;
-		if (parameters.xCoordinates !== undefined)
-			this.xCoordinates = parameters.xCoordinates;
-		if (parameters.yCoordinates !== undefined)
-			this.yCoordinates = parameters.yCoordinates;
+		this.endPtsOfContours ??= parameters.endPtsOfContours || [];
+		this.instructions ??= parameters.instructions || [];
+		this.flags ??= parameters.flags || [];
+		this.xCoordinates ??= parameters.xCoordinates || [];
+		this.yCoordinates ??= parameters.yCoordinates || [];
 	}
 
 	public static get className() {
@@ -286,66 +279,6 @@ export class SimpleGlyph extends Glyph {
 			e.message = `Failed to execute 'encode' on 'SimpleGlyph'. ${e.message}`;
 			throw e;
 		}
-	}
-
-	public get endPtsOfContours() {
-		if (!this._endPtsOfContours) {
-			this.decode();
-		}
-
-		return this._endPtsOfContours!;
-	}
-
-	public set endPtsOfContours(value: number[]) {
-		this._endPtsOfContours = value;
-	}
-
-	public get instructions() {
-		if (!this._instructions) {
-			this.decode();
-		}
-
-		return this._instructions!;
-	}
-
-	public set instructions(value: number[]) {
-		this._instructions = value;
-	}
-
-	public get flags() {
-		if (!("_flags" in this)) {
-			this.decode();
-		}
-
-		return this._flags!;
-	}
-
-	public set flags(value: number[]) {
-		this._flags = value;
-	}
-
-	public get xCoordinates() {
-		if (!this._xCoordinates) {
-			this.decode();
-		}
-
-		return this._xCoordinates!;
-	}
-
-	public set xCoordinates(value: number[]) {
-		this._xCoordinates = value;
-	}
-
-	public get yCoordinates() {
-		if (!this._yCoordinates) {
-			this.decode();
-		}
-
-		return this._yCoordinates!;
-	}
-
-	public set yCoordinates(value: number[]) {
-		this._yCoordinates = value;
 	}
 
 }

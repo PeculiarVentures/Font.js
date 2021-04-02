@@ -85,7 +85,7 @@ export class GLYF extends FontTable {
 				continue;
 			}
 
-			streams.push(new SeqStream({ stream: stream.stream.slice(loca.offsets[i - 1], loca.offsets[i]) }));
+			streams.push(new SeqStream({ stream: stream.stream.slice(loca.offsets[i - 1], loca.offsets[i]) })); // TODO Use subarray
 		}
 		//#endregion
 

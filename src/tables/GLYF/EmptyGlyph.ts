@@ -7,7 +7,7 @@ export interface EmptyGlyphParameters extends GlyphParameters {
 export class EmptyGlyph extends Glyph {
 
 	constructor(parameters: EmptyGlyphParameters = {}) {
-		super(parameters);
+		super();
 	}
 
 	public static get className() {
@@ -17,12 +17,14 @@ export class EmptyGlyph extends Glyph {
 	public decode() {
 		super.decode();
 
-		if (this.numberOfContours !== 0)
+		if (this.numberOfContours !== 0) {
 			throw new Error(`Incorrect numberOfContours for EmptyGlyph class: ${this.numberOfContours}`);
+		}
 	}
 
 	public encode(stream: SeqStream) {
 		// Nothing should be encoded here
+		// TODO Should we use super.encode?
 	}
 
 }
