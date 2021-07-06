@@ -2,7 +2,7 @@ import { SeqStream } from "bytestreamjs";
 import { unicodePointsToCodePoints, stringToCodePoints } from "./common";
 import { BaseClass } from "./BaseClass";
 import * as Tables from "./tables";
-import { Glyph, missingGlyph, nullGlyph } from "./tables";
+import { Glyph, GlyphMap, missingGlyph, nullGlyph } from "./tables";
 
 export enum ScalerTypes {
 	true = 0x74727565,
@@ -79,7 +79,7 @@ export class Font extends BaseClass {
 	public tables: Map<any, any>;
 	public warnings: string[];
 
-	private _glyphs?: Tables.Glyph[];
+	private _glyphs?: Tables.Glyph[]; // TODO maybe left
 
 	constructor(parameters: FontParameters = {}) {
 		super();
@@ -91,6 +91,53 @@ export class Font extends BaseClass {
 		this.tables = parameters.tables || new Map();
 
 		this.warnings = parameters.warnings || [];
+	}
+
+	private getUnicodeGlyphsMap(): GlyphMap | null {
+		const cmap: Tables.CMAP = this.tables.get(Tables.CMAP.tag);
+
+		// find unicode table (platform 0 or platform 3-1 or 3-10)
+		const tableUnicodeFormat = cmap.subTables.find(table =>
+			table.platformID === 0
+			|| (table.platformID === 3 && (table.platformSpecificID === 1 || table.platformSpecificID === 10)));
+
+		if (!tableUnicodeFormat) {
+			return null;
+		}
+
+		return tableUnicodeFormat.getGlyphMap();
+	}
+
+	/**
+	 * Returns glyph by letter or unicode
+	 * @param value One letter or unicode
+	 */
+	public findGlyphByUnicode(value: string | number): Tables.Glyph | null {
+		const map = this.getUnicodeGlyphsMap();
+		if (!map) {
+			return null;
+		}
+
+		// check value on type
+		let unicode: number;
+		if (typeof value === "string") {
+			if (value.length !== 1) {
+				throw new Error("Letter must be one");
+			}
+			unicode = value.charCodeAt(0);
+		} else {
+			unicode = value;
+		}
+
+		// find glyph from map
+		const indexGlyph = map.get(unicode);
+		if (!indexGlyph) {
+			return null;
+		}
+
+		const glyph = this.glyphs.find(g => g.index === indexGlyph);
+
+		return glyph || null;
 	}
 
 	public toStream(stream: SeqStream, streamOffset = 0): boolean {

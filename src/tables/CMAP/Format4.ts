@@ -1,6 +1,6 @@
 import { SeqStream } from "bytestreamjs";
 import { Glyph } from "../GLYF/Glyph";
-import { CMAPLanguage, CMAPSubTable, CMAPSubTableParameters } from "./CMAPSubTable";
+import { CMAPLanguage, CMAPSubTable, CMAPSubTableParameters, GlyphMap } from "./CMAPSubTable";
 
 interface Information {
 	start: number | null;
@@ -32,7 +32,7 @@ export interface Format4Parameters extends CMAPSubTableParameters {
  * @see https://docs.microsoft.com/en-us/typography/opentype/spec/cmap#format-4-segment-mapping-to-delta-values
  */
 export class Format4 extends CMAPSubTable implements CMAPLanguage {
-
+	
 	/**
 	 * Format number is set to 4
 	 */
@@ -41,14 +41,25 @@ export class Format4 extends CMAPSubTable implements CMAPLanguage {
 	}
 	public language: number;
 	public segments: Segment[];
-
+	
 	constructor(parameters: Format4Parameters = {}) {
 		super(parameters);
-
+		
 		this.language = parameters.language || 0;
 		this.segments = parameters.segments || [];
 	}
 
+	protected onGetGlyphMap(): GlyphMap {
+		const map: GlyphMap = new Map<number, number>();
+		for (const segment of this.segments) {
+			segment.codeToGID.forEach((value, key) => {
+				map.set(key, value);
+			});
+		}
+
+		return map;
+	}
+	
 	static get className() {
 		return "Format4";
 	}
@@ -340,6 +351,7 @@ export class Format4 extends CMAPSubTable implements CMAPLanguage {
 			gidToCode: new Map([[0, 0xFFFF]]),
 		});
 		//#endregion
+		
 		return new Format4({
 			language,
 			segments,
