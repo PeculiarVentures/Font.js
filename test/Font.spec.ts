@@ -22,7 +22,7 @@ context("Font", () => {
       hexstring: Buffer.from(fontB64, "base64").toString("hex"),
     });
     const font = fontjs.Font.fromStream(stream);
-    const glyph = font.findGlyphByUnicode(" ");
+    const glyph = font.findUnicodeGlyph(" ");
     assert(glyph);
   });
 

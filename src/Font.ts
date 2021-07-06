@@ -93,7 +93,7 @@ export class Font extends BaseClass {
 		this.warnings = parameters.warnings || [];
 	}
 
-	private findUnicodeGlyphsMap(): GlyphMap | null {
+	public findUnicodeGlyphsMap(): GlyphMap | null {
 		const cmap: Tables.CMAP = this.tables.get(Tables.CMAP.tag);
 
 		// find unicode table (platform 0 or platform 3-1 or 3-10)
@@ -112,7 +112,7 @@ export class Font extends BaseClass {
 	 * Returns glyph by letter or unicode
 	 * @param value One letter or unicode
 	 */
-	public findGlyphByUnicode(value: string | number): Tables.Glyph | null {
+	public findUnicodeGlyph(value: string | number): Tables.Glyph | null {
 		const map = this.findUnicodeGlyphsMap();
 		if (!map) {
 			return null;
