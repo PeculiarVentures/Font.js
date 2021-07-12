@@ -79,7 +79,7 @@ export class Font extends BaseClass {
 	public tables: Map<any, any>;
 	public warnings: string[];
 
-	private _glyphs?: Tables.Glyph[]; // TODO maybe left
+	private _glyphs?: Tables.Glyph[];
 
 	constructor(parameters: FontParameters = {}) {
 		super();
