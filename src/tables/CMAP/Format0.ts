@@ -1,6 +1,6 @@
 import { SeqStream } from "bytestreamjs";
 import { Glyph } from "../GLYF/Glyph";
-import { CMAPLanguage, CMAPSubTable, CMAPSubTableParameters } from "./CMAPSubTable";
+import { CMAPLanguage, CMAPSubTable, CMAPSubTableParameters, GlyphMap } from "./CMAPSubTable";
 
 export interface Format0Parameters extends CMAPSubTableParameters {
 	language?: number;
@@ -12,6 +12,9 @@ export interface Format0Parameters extends CMAPSubTableParameters {
  * @see https://docs.microsoft.com/en-us/typography/opentype/spec/cmap#format-0-byte-encoding-table
  */
 export class Format0 extends CMAPSubTable implements CMAPLanguage {
+	protected onGetGlyphMap(): GlyphMap {
+		throw new Error("Method not implemented.");
+	}
 
 	/**
 	 * Format number is set to 0

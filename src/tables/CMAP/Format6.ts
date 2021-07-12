@@ -1,6 +1,6 @@
 import { SeqStream } from "bytestreamjs";
 import { Glyph } from "../GLYF/Glyph";
-import { CMAPSubTable, CMAPSubTableParameters } from "./CMAPSubTable";
+import { CMAPSubTable, CMAPSubTableParameters, GlyphMap } from "./CMAPSubTable";
 
 export interface Format6Parameters extends CMAPSubTableParameters {
 	language?: number;
@@ -9,6 +9,9 @@ export interface Format6Parameters extends CMAPSubTableParameters {
 }
 
 export class Format6 extends CMAPSubTable {
+	protected onGetGlyphMap(): GlyphMap {
+		throw new Error("Method not implemented.");
+	}
 
 	/**
 	 * Format number is set to 6

@@ -1,4 +1,5 @@
 import { BaseClass } from "../../BaseClass";
+import { Glyph } from "../GLYF";
 
 export interface CMAPSubTableParameters {
 	platformID?: CMAPPlatformIDs;
@@ -45,6 +46,11 @@ export interface CMAPLanguage {
 }
 
 /**
+ * Map <code, index>
+ */
+export type GlyphMap = Map<number, number>;
+
+/**
  * Representation of EncodingRecord
  */
 export abstract class CMAPSubTable extends BaseClass {
@@ -62,6 +68,11 @@ export abstract class CMAPSubTable extends BaseClass {
 	 */
 	public abstract readonly format: number;
 
+	/**
+	 * Glyph mapping table by code
+	 */
+	private _glyphMap?: GlyphMap;
+
 	constructor(parameters: CMAPSubTableParameters = {}) {
 		super();
 
@@ -72,6 +83,20 @@ export abstract class CMAPSubTable extends BaseClass {
 	public static get className(): string {
 		return "CMAPSubTable";
 	}
+
+	/**
+	 * Returns glyph mapping table by code
+	 * @returns 
+	 */
+	public getGlyphMap(): GlyphMap {
+		if (!this._glyphMap) {
+			this._glyphMap = this.onGetGlyphMap();
+		}
+
+		return this._glyphMap;
+	}
+
+	protected abstract onGetGlyphMap(): GlyphMap;
 
 	/**
 	 * Return character code by GID
