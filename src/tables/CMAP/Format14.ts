@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { CMAPSubTable, CMAPSubTableParameters } from "./CMAPSubTable";
+import { CMAPSubTable, CMAPSubTableParameters, GlyphMap } from "./CMAPSubTable";
 
 
 export interface DefaultUVSRecords {
@@ -25,6 +25,9 @@ export interface Format14Parameters extends CMAPSubTableParameters {
 }
 
 export class Format14 extends CMAPSubTable {
+	protected onGetGlyphMap(): GlyphMap {
+		throw new Error("Method not implemented.");
+	}
 
 	/**
 	 * Format number is set to 14
