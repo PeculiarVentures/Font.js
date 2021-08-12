@@ -83,6 +83,25 @@ export class CMAP extends FontTable {
 		return true;
 	}
 
+	public getSubTable(): CMAPSubTable | null;
+	public getSubTable(platformID: number, platformSpecificID: number): CMAPSubTable | null;
+	/**
+	 * @internal
+	 */
+	public getSubTable(platformID?: number, platformSpecificID?: number): CMAPSubTable | null;
+	public getSubTable(platformID?: number, platformSpecificID?: number): CMAPSubTable | null {
+		for (const subTable of this.subTables) {
+			if (((platformID !== undefined && platformSpecificID !== undefined)
+				&& (subTable.platformID === platformID) && (subTable.platformSpecificID === platformSpecificID))
+				|| (subTable.platformID === 0
+					|| (subTable.platformID === 3 && (subTable.platformSpecificID === 1 || subTable.platformSpecificID === 10)))) {
+				return subTable;
+			}
+		}
+
+		return null;
+	}
+
 	public static fromStream(stream: SeqStream): CMAP {
 		const version = stream.getUint16();
 		const numberSubtables = stream.getUint16();
@@ -142,31 +161,27 @@ export class CMAP extends FontTable {
 		});
 	}
 
-	public gid(code: number, platformID = 3, platformSpecificID = 1): number {
-		// Replace absent chars via GID = 0 (as it is required by standard)
-		let result = 0;
-
-		for (const subTable of this.subTables) {
-			if ((subTable.platformID === platformID) && (subTable.platformSpecificID === platformSpecificID)) {
-				result = subTable.gid(code);
-				break;
-			}
+	public gid(code: number): number;
+	public gid(code: number, platformID: number, platformSpecificID: number): number;
+	public gid(code: number, platformID?: number, platformSpecificID?: number): number {
+		const subTable = this.getSubTable(platformID, platformSpecificID);
+		if (subTable) {
+			return subTable.gid(code);
 		}
 
-		return result;
+		// Replace absent chars via GID = 0 (as it is required by standard)
+		return 0;
 	}
 
-	public code(gid: number, platformID = 3, platformSpecificID = 1) {
-		let result = [];
-
-		for (const subTable of this.subTables) {
-			if ((subTable.platformID === platformID) && (subTable.platformSpecificID === platformSpecificID)) {
-				result = subTable.code(gid);
-				break;
-			}
+	public code(gid: number): number[];
+	public code(gid: number, platformID: number, platformSpecificID: number): number[];
+	public code(gid: number, platformID?: number, platformSpecificID?: number): any {
+		const subTable = this.getSubTable(platformID, platformSpecificID);
+		if (subTable) {
+			return subTable.code(gid);
 		}
 
-		return result;
+		return [];
 	}
 
 }
