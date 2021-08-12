@@ -1,11 +1,121 @@
 import { SeqStream } from "bytestreamjs";
+import { Convert, TextEncoding } from "pvtsutils";
 import { FontTable } from "../Table";
+
+export enum NameIDs {
+	/**
+	 * Copyright notice
+	 */
+	copyright = 0,
+	/**
+	 * Font Family name
+	 */
+	fontFamilyName = 1,
+	/**
+	 * Font Subfamily name
+	 */
+	fontSubFamilyName = 2,
+	/**
+	 * Unique font identifier
+	 */
+	uniqueFontID = 3,
+	/**
+	 * Full font name that reflects all family and relevant subfamily descriptors
+	 */
+	fullFontName = 4,
+	/**
+	 * Version string
+	 */
+	version = 5,
+	/**
+	 * PostScript name for the font
+	 */
+	postScriptFontName = 6,
+	/**
+	 * Trademark
+	 */
+	trademark = 7,
+	/**
+	 * Manufacturer Name
+	 */
+	manufacturerName = 8,
+	/**
+	 * Designer
+	 */
+	designer = 9,
+	/**
+	 * Description
+	 */
+	description = 10,
+	/**
+	 * URL Vendor
+	 */
+	urlVendor = 11,
+	/**
+	 * URL Designer
+	 */
+	urlDesigner = 12,
+	/**
+	 * License Description
+	 */
+	licenseDescription = 13,
+	/**
+	 * License Info URL
+	 */
+	licenseInfoURL = 14,
+	/**
+	 * Typographic Family name
+	 */
+	typographicFamilyName = 16,
+	/**
+	 * Typographic Subfamily name
+	 */
+	typographicSubfamilyName = 17,
+	/**
+	 * Compatible Full
+	 */
+	compatibleFull = 18,
+	/**
+	 * Sample text
+	 */
+	sampleText = 19,
+	/**
+	 * PostScript CID findfont name
+	 */
+	postScriptCID = 20,
+	/**
+	 * WWS Family Name
+	 */
+	wwsFamilyName = 21,
+	/**
+	 * WWS Subfamily Name
+	 */
+	wwsSubfamilyName = 22,
+	/**
+	 * Light Background Palette
+	 */
+	lightBackgroundPalette = 23,
+	/**
+	 * Dark Background Palette
+	 */
+	darkBackgroundPalette = 24,
+	/**
+	 * Variations PostScript Name Prefix
+	 */
+	postScriptNamePrefix = 25,
+}
+
+export interface NameRecordFilter {
+	platformID?: number;
+	platformSpecificID?: number;
+	languageID?: number;
+}
 
 export interface NAMERecord {
 	platformID: number;
-	platformSpecificID?: number;
-	languageID?: number;
-	nameID: number;
+	platformSpecificID: number;
+	languageID: number;
+	nameID: NameIDs;
 	length?: number;
 	offset?: number;
 	value: number[];
@@ -98,6 +208,36 @@ export class NAME extends FontTable {
 			stringOffset,
 			nameRecords
 		});
+	}
+
+	public getNameRecord(id: NameIDs, filter: NameRecordFilter = {}): NAMERecord | null {
+		for (const item of this.nameRecords) {
+			if (id !== item.nameID
+				|| (filter.platformID !== undefined && item.platformID !== filter.platformID)
+				|| (filter.platformSpecificID !== undefined && item.platformSpecificID !== filter.platformSpecificID)
+				|| (filter.languageID !== undefined && item.languageID !== filter.languageID)) {
+				continue;
+			}
+
+			return item;
+		}
+
+		return null;
+	}
+
+	public getName(id: NameIDs, filter: NameRecordFilter = {}): string | null {
+		const record = this.getNameRecord(id, filter);
+
+		if (record) {
+			let encoding: TextEncoding = "ascii";
+			if (record.platformID === 3 && record.platformSpecificID === 1) {
+				encoding = "utf16be";
+			}
+
+			return Convert.ToUtf8String(new Uint8Array(record.value), encoding);
+		}
+
+		return null;
 	}
 
 }
