@@ -609,7 +609,7 @@ export class Font extends BaseClass {
 						return result || null;
 					}
 				default:
-					console.log(`Invalid table tag - ${tag}`); // TODO Don't use console
+				// console.log(`Invalid table tag - ${tag}`); // TODO Don't use console
 				//throw new Error(`Invalid table tag - ${tag}`);
 			}
 
@@ -834,6 +834,8 @@ export class Font extends BaseClass {
 			name.nameRecords.push({
 				nameID: 6,
 				platformID: 0,
+				platformSpecificID: 0,
+				languageID: 0,
 				value: codePoints
 			});
 			//#endregion
