@@ -230,7 +230,8 @@ export class NAME extends FontTable {
 
 		if (record) {
 			let encoding: TextEncoding = "ascii";
-			if (record.platformID === 3 && record.platformSpecificID === 1) {
+			if (record.platformID === 0
+				|| (record.platformID === 3 && (record.platformSpecificID === 1 || record.platformSpecificID === 10))) {
 				encoding = "utf16be";
 			}
 
