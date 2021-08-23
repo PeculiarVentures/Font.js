@@ -9,7 +9,7 @@ Font.js (FontJS) is library helping parse/encode and manipulate TrueType font fi
 ## Example
 ```javascript
 import * as fontjs from "fontjs";
-import { SeqStream, ByteStream } from "bytestream";
+import { SeqStream, ByteStream } from "bytestreamjs";
 
 async function fontTest()
 {
