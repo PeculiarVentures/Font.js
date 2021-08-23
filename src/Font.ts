@@ -38,7 +38,7 @@ function calculateCheckSum(buffer: ArrayBuffer): number {
 
 interface FONTValues {
 	missingGlyph?: Tables.Glyph;
-	nullGlyph?: Tables.SimpleGlyph;
+	nullGlyph?: Tables.Glyph;
 	ascent?: number;
 	descent?: number;
 	lineGap?: number;
