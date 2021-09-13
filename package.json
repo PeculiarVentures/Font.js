@@ -1,6 +1,6 @@
 {
   "name": "fontjs",
-  "version": "2.2.0-beta.3",
+  "version": "2.2.0-beta.4",
   "description": "FontJS (Font.js) is a packages for TrueType font parsing and manipulation",
   "files": [
     "build",
