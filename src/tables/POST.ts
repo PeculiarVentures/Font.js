@@ -1,4 +1,5 @@
 import { SeqStream } from "bytestreamjs";
+import { appendFixed, getFixed } from "../common";
 import { FontTable } from "../Table";
 
 // Standard names
@@ -395,7 +396,7 @@ export class POST extends FontTable { // TODO Split into versions
 
 	public toStream(stream: SeqStream): boolean {
 		stream.appendUint32(this.version);
-		stream.appendUint32(this.italicAngle);
+		appendFixed(this.italicAngle, stream);
 		stream.appendInt16(this.underlinePosition);
 		stream.appendInt16(this.underlineThickness);
 		stream.appendUint32(this.isFixedPitch);
@@ -428,7 +429,7 @@ export class POST extends FontTable { // TODO Split into versions
 
 		//#region Parse major parameters
 		parameters.version = stream.getUint32();
-		parameters.italicAngle = stream.getUint32();
+		parameters.italicAngle = getFixed(stream);
 		parameters.underlinePosition = stream.getInt16();
 		parameters.underlineThickness = stream.getInt16();
 		parameters.isFixedPitch = stream.getUint32();

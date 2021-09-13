@@ -143,21 +143,19 @@ export function checkFlag(flag: number, mask: number) {
 	return ((flag & mask) === mask);
 }
 
-export interface Fixed {
-	integer: number;
-	fraction: number;
+/**
+ * 16.16-bit signed fixed-point number
+ */
+export type Fixed = number;
+
+const point = 1 << (32 >> 1);
+
+export function getFixed(stream: SeqStream): number {
+	return stream.getInt32() / point;
 }
 
-export function getFixed(stream: SeqStream): Fixed {
-	return {
-		integer: stream.getInt16(),
-		fraction: stream.getUint16(),
-	};
-}
-
-export function appendFixed(value: Fixed, stream: SeqStream): void {
-	stream.appendInt16(value.integer);
-	stream.appendUint16(value.fraction);
+export function appendFixed(value: number, stream: SeqStream): void {
+	stream.appendInt32(value * point);
 }
 
 
