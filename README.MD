@@ -23,3 +23,8 @@ async function fontTest()
 	const toStreamResult = font.toStream(fontStream);
 }
 ```
+
+## Related
+
+- [TrueType Reference Manual](https://developer.apple.com/fonts/TrueType-Reference-Manual/)
+- [OpenType Specification](https://docs.microsoft.com/en-us/typography/opentype/spec/)
