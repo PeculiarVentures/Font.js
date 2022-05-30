@@ -93,6 +93,5 @@
     "ansi-regex": "^5.0.1",
     "browserslist": "^4.16.5",
     "minimist": "^1.2.6"
-
   }
 }
