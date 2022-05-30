@@ -1,4 +1,4 @@
-import { DICTParameters, INDEX, DICT } from "../CFF";
+import { DICTParameters, DICT } from "../CFF";
 import { CFF2CharstringINDEX } from "./CFF2CharstringINDEX";
 
 export interface CFF2PrivateDICTParameters extends DICTParameters {

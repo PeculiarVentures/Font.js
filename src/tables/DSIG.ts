@@ -1,7 +1,4 @@
 import * as asn1js from "asn1js";
-// TODO Remove lint and ts comments
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import * as pkijs from "pkijs";
 import { SeqStream } from "bytestreamjs";
 import { FontTable } from "../Table";

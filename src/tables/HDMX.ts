@@ -57,8 +57,12 @@ export class HDMX extends FontTable {
 
 			return true;
 		} catch (e) {
-			e.message = `Failed to execute 'toStream' on 'HDMX'. ${e.message}`;
-			throw e;
+			if (e instanceof Error) {
+				e.message = `Failed to execute 'toStream' on 'HDMX'. ${e.message}`;
+				throw e;
+			}
+
+			throw new Error("Failed to execute 'toStream' on 'HDMX'");
 		}
 	}
 
@@ -107,8 +111,13 @@ export class HDMX extends FontTable {
 
 			return new HDMX(parameters);
 		} catch (e) {
-			e.message = `Failed to execute 'fromStream' on 'HDMX'. ${e.message}`;
-			throw e;
+			const error = "Failed to execute 'fromStream' on 'HDMX'";
+			if (e instanceof Error) {
+				e.message = `${error}. ${e.message}`;
+				throw e;
+			}
+
+			throw new Error(error);
 		}
 	}
 

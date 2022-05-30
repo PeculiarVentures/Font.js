@@ -276,8 +276,13 @@ export class SimpleGlyph extends Glyph {
 				stream.appendView(new Uint8Array([0]));
 			//#endregion
 		} catch (e) {
-			e.message = `Failed to execute 'encode' on 'SimpleGlyph'. ${e.message}`;
-			throw e;
+			const error = "Failed to execute 'encode' on 'SimpleGlyph'";
+			if (e instanceof Error) {
+				e.message = `${error}. ${e.message}`;
+				throw e;
+			}
+
+			throw new Error(error);
 		}
 	}
 

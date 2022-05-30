@@ -69,6 +69,7 @@ export class Format12 extends CMAPSubTable {
 			}
 		}
 		//#endregion
+
 		return new Format12({
 			language,
 			gidToCode,

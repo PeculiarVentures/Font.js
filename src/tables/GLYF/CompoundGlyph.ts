@@ -250,8 +250,13 @@ export class CompoundGlyph extends Glyph {
 				stream.appendView(new Uint8Array(this.instructions));
 			//#endregion
 		} catch (e) {
-			e.message = `Failed to execute 'encode' on 'CompoundGlyph. ${e.message}`;
-			throw e;
+			const error = "Failed to execute 'encode' on 'CompoundGlyph";
+			if (e instanceof Error) {
+				e.message = `${error}. ${e.message}`;
+				throw e;
+			}
+
+			throw new Error(error);
 		}
 	}
 
