@@ -1,6 +1,6 @@
 {
   "name": "fontjs",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "FontJS (Font.js) is a packages for TrueType font parsing and manipulation",
   "files": [
     "build",
