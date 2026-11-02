@@ -120,3 +120,29 @@ describe("CMAP", () => {
     });
   });
 });
+
+describe("Format12", () => {
+  it("groups consecutive codes and glyph IDs on toStream/fromStream", () => {
+    const codeToGID = new Map([
+      [0x41, 10],
+      [0x42, 11],
+      [0x43, 12],
+      [0x45, 13], // gap in codes: new group
+      [0x1f600, 20],
+      [0x1f601, 30], // gap in glyph IDs: new group
+    ]);
+    const subTable = new font.Tables.Format12({ language: 0, codeToGID });
+    const stream = new SeqStream();
+    subTable.toStream(stream);
+
+    // header (16 bytes) + 4 groups * 12 bytes
+    assert.strictEqual(stream.length, 16 + 4 * 12);
+
+    const parsedStream = new SeqStream({ stream: stream.stream.slice(0, stream.length) });
+    assert.strictEqual(parsedStream.getUint16(), 12);
+    const parsed = font.Tables.Format12.fromStream(parsedStream);
+    assert.deepStrictEqual(parsed.codeToGID, codeToGID);
+    assert.deepStrictEqual(parsed.code(13), [0x45]);
+    assert.strictEqual(parsed.gid(0x1f601), 30);
+  });
+});

@@ -4,13 +4,13 @@ import { CMAPSubTable, CMAPSubTableParameters, GlyphMap } from "./CMAPSubTable";
 export interface Format12Parameters extends CMAPSubTableParameters {
   language?: number;
   groups?: number[];
-  codeToGID?: Map<number, number[]>;
+  codeToGID?: Map<number, number>;
   gidToCode?: Map<number, number[]>;
 }
 
 export class Format12 extends CMAPSubTable {
   protected onGetGlyphMap(): GlyphMap {
-    throw new Error("Method not implemented.");
+    return new Map(this.codeToGID);
   }
 
   /**
@@ -41,7 +41,7 @@ export class Format12 extends CMAPSubTable {
 
   public static fromStream(stream: SeqStream) {
     //#region Initial variables
-    const codeToGID = new Map<number, number[]>();
+    const codeToGID = new Map<number, number>();
     const gidToCode = new Map<number, number[]>();
     //#endregion
     //#region Read major information
@@ -62,10 +62,7 @@ export class Format12 extends CMAPSubTable {
 
         gidToCode.set(startGlyphID, code);
 
-        const glyph = codeToGID.get(j) || [];
-        glyph.push(startGlyphID);
-
-        codeToGID.set(j, glyph);
+        codeToGID.set(j, startGlyphID);
       }
     }
     //#endregion
@@ -75,6 +72,32 @@ export class Format12 extends CMAPSubTable {
       gidToCode,
       codeToGID,
     });
+  }
+
+  public toStream(stream: SeqStream): boolean {
+    // Group consecutive character codes that map to consecutive glyph IDs
+    const groups: [startCharCode: number, endCharCode: number, startGlyphID: number][] = [];
+    for (const [code, gid] of [...this.codeToGID].sort((a, b) => a[0] - b[0])) {
+      const last = groups[groups.length - 1];
+      if (last && code === last[1] + 1 && gid === last[2] + (code - last[0])) {
+        last[1] = code;
+      } else {
+        groups.push([code, code, gid]);
+      }
+    }
+
+    stream.appendUint16(this.format);
+    stream.appendUint16(0); // reserved
+    stream.appendUint32(16 + groups.length * 12); // length
+    stream.appendUint32(this.language);
+    stream.appendUint32(groups.length);
+    for (const [startCharCode, endCharCode, startGlyphID] of groups) {
+      stream.appendUint32(startCharCode);
+      stream.appendUint32(endCharCode);
+      stream.appendUint32(startGlyphID);
+    }
+
+    return true;
   }
 
   public gid(code: number): number {
