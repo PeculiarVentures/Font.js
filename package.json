@@ -23,14 +23,16 @@
   "scripts": {
     "test": "mocha",
     "clear": "rimraf build/* docs",
-    "lint": "eslint .",
-    "lint:fix": "eslint --fix .",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
     "build": "npm run build:module && npm run build:types",
     "build:module": "rollup -c",
     "prebuild:types": "rimraf build/types",
     "build:types": "tsc -p tsconfig.json --outDir build/types --declaration --emitDeclarationOnly",
     "rebuild": "npm run clear && npm run build",
-    "coverage": "nyc npm test"
+    "coverage": "nyc npm test",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check"
   },
   "keywords": [
     "TrueType"
@@ -42,11 +44,10 @@
   "devDependencies": {
     "@types/mocha": "^9.1.1",
     "@types/node": "^17.0.36",
-    "@typescript-eslint/eslint-plugin": "^5.27.0",
-    "@typescript-eslint/parser": "^5.27.0",
-    "eslint": "^8.16.0",
     "mocha": "^10.0.0",
     "nyc": "^15.1.0",
+    "oxfmt": "^0.75.0",
+    "oxlint": "^1.90.0",
     "rimraf": "^3.0.2",
     "rollup": "^2.75.3",
     "rollup-plugin-typescript2": "^0.31.2",

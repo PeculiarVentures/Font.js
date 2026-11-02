@@ -3,7 +3,6 @@ import { SeqStream } from "bytestreamjs";
 import * as font from "../src";
 
 context("POST", () => {
-
   it("toStream/fromStream", () => {
     const table = new font.Tables.POST({
       version: 196608,
@@ -14,7 +13,7 @@ context("POST", () => {
       minMemType42: 0,
       maxMemType42: 0,
       minMemType1: 0,
-      maxMemType1: 0
+      maxMemType1: 0,
     });
     const stream = new SeqStream();
     table.toStream(stream);
@@ -22,5 +21,4 @@ context("POST", () => {
     const parsedTable = font.Tables.POST.fromStream(new SeqStream({ buffer: stream.buffer }));
     assert.deepStrictEqual(parsedTable, table);
   });
-
 });

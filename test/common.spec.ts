@@ -3,7 +3,6 @@ import { SeqStream } from "bytestreamjs";
 import * as common from "../src/common";
 
 context("common", () => {
-
   context("Fixed", () => {
     it("positive", () => {
       const readStream = new SeqStream({ hexstring: "000b8000" });
@@ -29,5 +28,4 @@ context("common", () => {
       assert.strictEqual(Buffer.from(writeStream.stream.view.subarray(0, 4)).toString("hex"), Buffer.from(readStream.stream.view).toString("hex"));
     });
   });
-
 });

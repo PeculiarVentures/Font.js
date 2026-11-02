@@ -3,28 +3,28 @@ import { Glyph } from "../GLYF/Glyph";
 import { CMAPLanguage, CMAPSubTable, CMAPSubTableParameters, GlyphMap } from "./CMAPSubTable";
 
 interface Information {
-	start: number | null;
-	end: number | null;
-	delta: number;
-	format: number;
-	offset?: number;
+  start: number | null;
+  end: number | null;
+  delta: number;
+  format: number;
+  offset?: number;
 }
 
 // TODO Move Segment to class. Add methods to read/write codes and indexes
 export interface Segment {
-	codeToGID: Map<number, number>;
-	gidToCode: Map<number, number>;
-	delta?: number;
-	offset?: number;
+  codeToGID: Map<number, number>;
+  gidToCode: Map<number, number>;
+  delta?: number;
+  offset?: number;
 }
 
 export interface Format4Parameters extends CMAPSubTableParameters {
-	/**
-	 * Format number is set to 4
-	 */
-	format?: 4;
-	language?: number;
-	segments?: Segment[];
+  /**
+   * Format number is set to 4
+   */
+  format?: 4;
+  language?: number;
+  segments?: Segment[];
 }
 
 /**
@@ -32,356 +32,346 @@ export interface Format4Parameters extends CMAPSubTableParameters {
  * @see https://docs.microsoft.com/en-us/typography/opentype/spec/cmap#format-4-segment-mapping-to-delta-values
  */
 export class Format4 extends CMAPSubTable implements CMAPLanguage {
-	
-	/**
-	 * Format number is set to 4
-	 */
-	public get format(): 4 {
-		return 4;
-	}
-	public language: number;
-	public segments: Segment[];
-	
-	constructor(parameters: Format4Parameters = {}) {
-		super(parameters);
-		
-		this.language = parameters.language || 0;
-		this.segments = parameters.segments || [];
-	}
+  /**
+   * Format number is set to 4
+   */
+  public get format(): 4 {
+    return 4;
+  }
+  public language: number;
+  public segments: Segment[];
 
-	protected onGetGlyphMap(): GlyphMap {
-		const map: GlyphMap = new Map<number, number>();
-		for (const segment of this.segments) {
-			segment.codeToGID.forEach((value, key) => {
-				map.set(key, value);
-			});
-		}
+  constructor(parameters: Format4Parameters = {}) {
+    super(parameters);
 
-		return map;
-	}
-	
-	static get className() {
-		return "Format4";
-	}
+    this.language = parameters.language || 0;
+    this.segments = parameters.segments || [];
+  }
 
-	public toStream(stream: SeqStream): boolean {
-		//#region Initial variables
-		const segCountX2 = this.segments.length << 1;
-		const searchRange = Math.pow(2, Math.floor(Math.log(this.segments.length) / Math.log(2))) * 2;
+  protected onGetGlyphMap(): GlyphMap {
+    const map: GlyphMap = new Map<number, number>();
+    for (const segment of this.segments) {
+      segment.codeToGID.forEach((value, key) => {
+        map.set(key, value);
+      });
+    }
 
-		const startCode: number[] = [];
-		const endCode: number[] = [];
-		const idDelta: number[] = [];
-		const idRangeOffset: number[] = [];
-		//#endregion
-		//#region Analyze segments
-		const segmentInformation = [];
+    return map;
+  }
 
-		for (const segment of this.segments) {
-			//#region Initial variables
-			let start = null;
-			let end = null;
+  static get className() {
+    return "Format4";
+  }
 
-			let pKey = null;
-			let pValue = null;
+  public toStream(stream: SeqStream): boolean {
+    //#region Initial variables
+    const segCountX2 = this.segments.length << 1;
+    const searchRange = Math.pow(2, Math.floor(Math.log(this.segments.length) / Math.log(2))) * 2;
 
-			let format = 0;
-			//#endregion
-			//#region Check all values in the segment
-			segment.codeToGID = new Map([...segment.codeToGID.entries()].sort((a, b) => (a[0] - b[0])));
+    const startCode: number[] = [];
+    const endCode: number[] = [];
+    const idDelta: number[] = [];
+    const idRangeOffset: number[] = [];
+    //#endregion
+    //#region Analyze segments
+    const segmentInformation = [];
 
-			for (const [key, value] of segment.codeToGID) {
-				if (start === null) {
-					start = key;
-				}
+    for (const segment of this.segments) {
+      //#region Initial variables
+      let start = null;
+      let end = null;
 
-				end = key;
+      let pKey = null;
+      let pValue = null;
 
-				if (pKey === null)
-					pKey = key;
-				else {
-					if ((pKey + 1) !== key)
-						throw new Error("Inconsistent information in CMAP segment");
+      let format = 0;
+      //#endregion
+      //#region Check all values in the segment
+      segment.codeToGID = new Map([...segment.codeToGID.entries()].sort((a, b) => a[0] - b[0]));
 
-					pKey = key;
-				}
+      for (const [key, value] of segment.codeToGID) {
+        if (start === null) {
+          start = key;
+        }
 
-				if (pValue === null)
-					pValue = value;
-				else {
-					if ((pValue + 1) !== value)
-						format = 1;
+        end = key;
 
-					pValue = value;
-				}
-			}
-			//#endregion
-			//#region Set correct "delta" values (useless in case "format = 1")
-			const information: Information = {
-				start,
-				end,
-				delta: 0,
-				format
-			};
+        if (pKey === null) pKey = key;
+        else {
+          if (pKey + 1 !== key) throw new Error("Inconsistent information in CMAP segment");
 
-			if (format === 0) {
-				// TODO Remove lint and ts comments
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-				// @ts-ignore
-				information.delta = (segment.codeToGID.get(information.start) - information.start); // & 0xFFFF;
-			}
-			//#endregion
-			segmentInformation.push(information);
-		}
-		//#endregion
-		//#region Write "format = 1" segments to temporary stream
-		const format1Stream = new SeqStream();
+          pKey = key;
+        }
 
-		for (let i = 0; i < this.segments.length; i++) {
-			if (segmentInformation[i].format === 1) {
-				segmentInformation[i].offset = format1Stream.start + segCountX2 - (i << 1);
+        if (pValue === null) pValue = value;
+        else {
+          if (pValue + 1 !== value) format = 1;
 
-				for (const value of this.segments[i].codeToGID.values()) {
-					format1Stream.appendUint16(value);
-				}
-			}
-		}
-		//#endregion
-		//#region Write information header
-		stream.appendUint16(4); // CMAP format
-		stream.appendUint16(14 + (4 * this.segments.length * 2) + format1Stream.length + 2); // +2 for "reservedPad"
-		stream.appendUint16(this.language);
-		stream.appendUint16(segCountX2);
-		stream.appendUint16(searchRange);
-		stream.appendUint16(Math.log(searchRange >> 1) / Math.log(2));
-		stream.appendUint16(segCountX2 - searchRange);
-		//#endregion
-		//#region Write aux arrays
-		for (const information of segmentInformation) {
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			startCode.push(information.start!);
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			endCode.push(information.end!);
-			idDelta.push(information.delta);
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			idRangeOffset.push(information.offset!);
-		}
+          pValue = value;
+        }
+      }
+      //#endregion
+      //#region Set correct "delta" values (useless in case "format = 1")
+      const information: Information = {
+        start,
+        end,
+        delta: 0,
+        format,
+      };
 
-		for (const code of endCode) {
-			stream.appendUint16(code);
-		}
+      if (format === 0) {
+        // TODO Remove lint and ts comments
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        information.delta = segment.codeToGID.get(information.start) - information.start; // & 0xFFFF;
+      }
+      //#endregion
+      segmentInformation.push(information);
+    }
+    //#endregion
+    //#region Write "format = 1" segments to temporary stream
+    const format1Stream = new SeqStream();
 
-		stream.appendUint16(0); // reservedPad
+    for (let i = 0; i < this.segments.length; i++) {
+      if (segmentInformation[i].format === 1) {
+        segmentInformation[i].offset = format1Stream.start + segCountX2 - (i << 1);
 
-		for (const code of startCode) {
-			stream.appendUint16(code);
-		}
+        for (const value of this.segments[i].codeToGID.values()) {
+          format1Stream.appendUint16(value);
+        }
+      }
+    }
+    //#endregion
+    //#region Write information header
+    stream.appendUint16(4); // CMAP format
+    stream.appendUint16(14 + 4 * this.segments.length * 2 + format1Stream.length + 2); // +2 for "reservedPad"
+    stream.appendUint16(this.language);
+    stream.appendUint16(segCountX2);
+    stream.appendUint16(searchRange);
+    stream.appendUint16(Math.log(searchRange >> 1) / Math.log(2));
+    stream.appendUint16(segCountX2 - searchRange);
+    //#endregion
+    //#region Write aux arrays
+    for (const information of segmentInformation) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      startCode.push(information.start!);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      endCode.push(information.end!);
+      idDelta.push(information.delta);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      idRangeOffset.push(information.offset!);
+    }
 
-		for (const code of idDelta) {
-			stream.appendUint16(code);
-		}
+    for (const code of endCode) {
+      stream.appendUint16(code);
+    }
 
-		for (const code of idRangeOffset) {
-			stream.appendUint16(code);
-		}
-		//#endregion
-		//#region Finally append information about "format = 1" segments
-		stream.appendView(new Uint8Array(format1Stream.buffer));
-		//#endregion
+    stream.appendUint16(0); // reservedPad
 
-		return true;
-	}
+    for (const code of startCode) {
+      stream.appendUint16(code);
+    }
 
-	public static fromStream(stream: SeqStream): Format4 {
-		//#region Read major information
-		stream.getUint16(); // length
+    for (const code of idDelta) {
+      stream.appendUint16(code);
+    }
 
-		const language = stream.getUint16(); // language
-		const segCountX2 = stream.getUint16(); // segCountX2
-		const segCount = segCountX2 >> 1;
-		stream.getUint16(); // searchRange
-		stream.getUint16(); // entrySelector
-		stream.getUint16(); // rangeShift
-		//#endregion
+    for (const code of idRangeOffset) {
+      stream.appendUint16(code);
+    }
+    //#endregion
+    //#region Finally append information about "format = 1" segments
+    stream.appendView(new Uint8Array(format1Stream.buffer));
+    //#endregion
 
-		//#region Initialize "endCode" array
-		const endCode: number[] = [];
+    return true;
+  }
 
-		for (let i = 0; i < segCount; i++) {
-			const code = stream.getUint16();
-			endCode.push(code);
-		}
-		//#endregion
+  public static fromStream(stream: SeqStream): Format4 {
+    //#region Read major information
+    stream.getUint16(); // length
 
-		stream.getUint16(); // reservedPad
+    const language = stream.getUint16(); // language
+    const segCountX2 = stream.getUint16(); // segCountX2
+    const segCount = segCountX2 >> 1;
+    stream.getUint16(); // searchRange
+    stream.getUint16(); // entrySelector
+    stream.getUint16(); // rangeShift
+    //#endregion
 
-		//#region Initialize "startCode" array
-		const startCode: number[] = [];
+    //#region Initialize "endCode" array
+    const endCode: number[] = [];
 
-		for (let i = 0; i < segCount; i++) {
-			const code = stream.getUint16();
-			startCode.push(code);
-		}
-		//#endregion
+    for (let i = 0; i < segCount; i++) {
+      const code = stream.getUint16();
+      endCode.push(code);
+    }
+    //#endregion
 
-		//#region Initialize "idDelta" array
-		const idDelta = [];
+    stream.getUint16(); // reservedPad
 
-		for (let i = 0; i < segCount; i++) {
-			const code = stream.getInt16();
-			idDelta.push(code);
-		}
-		//#endregion
+    //#region Initialize "startCode" array
+    const startCode: number[] = [];
 
-		//#region Initialize "idRangeOffset" array
-		const idRangeTableOffset = stream.start;
+    for (let i = 0; i < segCount; i++) {
+      const code = stream.getUint16();
+      startCode.push(code);
+    }
+    //#endregion
 
-		const idRangeOffset: number[] = [];
+    //#region Initialize "idDelta" array
+    const idDelta = [];
 
-		for (let i = 0; i < segCount; i++) {
-			const code = stream.getUint16();
-			idRangeOffset.push(code);
-		}
-		//#endregion
+    for (let i = 0; i < segCount; i++) {
+      const code = stream.getInt16();
+      idDelta.push(code);
+    }
+    //#endregion
 
-		//#region Combine all segment's data and calculate glyph's indexes
-		const segments: Segment[] = [];
+    //#region Initialize "idRangeOffset" array
+    const idRangeTableOffset = stream.start;
 
-		for (let i = 0; i < segCount; i++) {
-			//#region Initial variables
-			const codeToGID = new Map<number, number>();
-			const gidToCode = new Map<number, number>();
+    const idRangeOffset: number[] = [];
 
-			const start = startCode[i];
-			const end = endCode[i];
-			const offset = idRangeTableOffset + (i * 2);
+    for (let i = 0; i < segCount; i++) {
+      const code = stream.getUint16();
+      idRangeOffset.push(code);
+    }
+    //#endregion
 
-			let rangeStream: SeqStream | null = null;
-			const id = idRangeOffset[i];
-			if (id) {
-				rangeStream = new SeqStream({
-					stream: stream.stream.slice(
-						offset + id,
-						offset + id + ((end - start) << 1) + 2)
-				});
-			}
-			//#endregion
-			for (let j = start; j <= end; j++) {
-				let glyphIndex = 0;
+    //#region Combine all segment's data and calculate glyph's indexes
+    const segments: Segment[] = [];
 
-				if (rangeStream) {
-					const value = rangeStream.getUint16();
-					glyphIndex = (value + idDelta[i]) & 0xFFFF;
-				} else {
-					glyphIndex = (j + idDelta[i]) & 0xFFFF;
-				}
+    for (let i = 0; i < segCount; i++) {
+      //#region Initial variables
+      const codeToGID = new Map<number, number>();
+      const gidToCode = new Map<number, number>();
 
-				codeToGID.set(j, glyphIndex);
-				gidToCode.set(glyphIndex, j);
-			}
+      const start = startCode[i];
+      const end = endCode[i];
+      const offset = idRangeTableOffset + i * 2;
 
-			segments.push({
-				codeToGID,
-				gidToCode,
-				delta: idDelta[i],
-				offset: idRangeOffset[i],
-			});
-		}
-		//#endregion
+      let rangeStream: SeqStream | null = null;
+      const id = idRangeOffset[i];
+      if (id) {
+        rangeStream = new SeqStream({
+          stream: stream.stream.slice(offset + id, offset + id + ((end - start) << 1) + 2),
+        });
+      }
+      //#endregion
+      for (let j = start; j <= end; j++) {
+        let glyphIndex = 0;
 
-		return new Format4({
-			language,
-			segments
-		});
-	}
+        if (rangeStream) {
+          const value = rangeStream.getUint16();
+          glyphIndex = (value + idDelta[i]) & 0xffff;
+        } else {
+          glyphIndex = (j + idDelta[i]) & 0xffff;
+        }
 
-	/**
-	 * Make Format4 table directly from array of code points
-	 *
-	 * @param language
-	 * @param glyphs Array of glyphs.
-	 *
-	 * !!! MUST BE WITH "MISSING" AND "NULL" GLYPHS !!!
-	 * @param [platformID=3]
-	 * @param [platformSpecificID=1]
-	 */
-	public static fromGlyphs(language: number, glyphs: Glyph[], platformID = 3, platformSpecificID = 1): Format4 {
-		//#region Initial variables
-		const codeToGID = new Map<number, number>();
+        codeToGID.set(j, glyphIndex);
+        gidToCode.set(glyphIndex, j);
+      }
 
-		const segments: Segment[] = [];
-		//#endregion
-		//#region Fill map (!!! FIRST TWO GLYPHS MUST BE "MISSING" AND "NULL" GLYPHS !!!)
-		for (let i = 2; i < glyphs.length; i++) {
-			for (const unicode of glyphs[i].unicodes!)
-				codeToGID.set(unicode, i);
-		}
-		//#endregion
-		//#region Divide map to correct regions
-		const codeToGIDArray = Array.from(codeToGID).sort((a, b) => (a[0] - b[0]));
+      segments.push({
+        codeToGID,
+        gidToCode,
+        delta: idDelta[i],
+        offset: idRangeOffset[i],
+      });
+    }
+    //#endregion
 
-		let segment = {
-			codeToGID: new Map(),
-			gidToCode: new Map()
-		};
+    return new Format4({
+      language,
+      segments,
+    });
+  }
 
-		let prevCode = codeToGIDArray[0][0] - 1;
+  /**
+   * Make Format4 table directly from array of code points
+   *
+   * @param language
+   * @param glyphs Array of glyphs.
+   *
+   * !!! MUST BE WITH "MISSING" AND "NULL" GLYPHS !!!
+   * @param [platformID=3]
+   * @param [platformSpecificID=1]
+   */
+  public static fromGlyphs(language: number, glyphs: Glyph[], platformID = 3, platformSpecificID = 1): Format4 {
+    //#region Initial variables
+    const codeToGID = new Map<number, number>();
 
-		for (let i = 0; i < codeToGIDArray.length; i++) {
-			if (codeToGIDArray[i][0] > (prevCode + 1)) {
-				segments.push(segment);
+    const segments: Segment[] = [];
+    //#endregion
+    //#region Fill map (!!! FIRST TWO GLYPHS MUST BE "MISSING" AND "NULL" GLYPHS !!!)
+    for (let i = 2; i < glyphs.length; i++) {
+      for (const unicode of glyphs[i].unicodes!) codeToGID.set(unicode, i);
+    }
+    //#endregion
+    //#region Divide map to correct regions
+    const codeToGIDArray = Array.from(codeToGID).sort((a, b) => a[0] - b[0]);
 
-				segment = {
-					codeToGID: new Map([codeToGIDArray[i]]),
-					gidToCode: new Map([[codeToGIDArray[i][1], codeToGIDArray[i][0]]])
-				};
-			} else {
-				segment.codeToGID.set(codeToGIDArray[i][0], codeToGIDArray[i][1]);
-				segment.gidToCode.set(codeToGIDArray[i][1], codeToGIDArray[i][0]);
-			}
+    let segment = {
+      codeToGID: new Map(),
+      gidToCode: new Map(),
+    };
 
-			prevCode = codeToGIDArray[i][0];
-		}
+    let prevCode = codeToGIDArray[0][0] - 1;
 
-		segments.push(segment);
-		//#endregion
-		//#region Append specific segment for "missingGlyph"
-		segments.push({
-			codeToGID: new Map([[0xFFFF, 0]]),
-			gidToCode: new Map([[0, 0xFFFF]]),
-		});
-		//#endregion
-		
-		return new Format4({
-			language,
-			segments,
-			platformID,
-			platformSpecificID
-		});
-	}
+    for (let i = 0; i < codeToGIDArray.length; i++) {
+      if (codeToGIDArray[i][0] > prevCode + 1) {
+        segments.push(segment);
 
-	public gid(code: number): number {
-		// Replace absent chars via GID = 0 (as it is required by standard)
-		for (const segment of this.segments) {
-			const result = segment.codeToGID.get(code);
-			if (result) {
-				return result;
-			}
-		}
+        segment = {
+          codeToGID: new Map([codeToGIDArray[i]]),
+          gidToCode: new Map([[codeToGIDArray[i][1], codeToGIDArray[i][0]]]),
+        };
+      } else {
+        segment.codeToGID.set(codeToGIDArray[i][0], codeToGIDArray[i][1]);
+        segment.gidToCode.set(codeToGIDArray[i][1], codeToGIDArray[i][0]);
+      }
 
-		return 0;
-	}
+      prevCode = codeToGIDArray[i][0];
+    }
 
-	public code(gid: number): number[] {
-		const result: number[] = [];
+    segments.push(segment);
+    //#endregion
+    //#region Append specific segment for "missingGlyph"
+    segments.push({
+      codeToGID: new Map([[0xffff, 0]]),
+      gidToCode: new Map([[0, 0xffff]]),
+    });
+    //#endregion
 
-		for (const segment of this.segments) {
-			const segmentResult = segment.gidToCode.get(gid);
-			if (typeof segmentResult !== "undefined")
-				result.push(segmentResult);
-		}
+    return new Format4({
+      language,
+      segments,
+      platformID,
+      platformSpecificID,
+    });
+  }
 
-		return result;
-	}
+  public gid(code: number): number {
+    // Replace absent chars via GID = 0 (as it is required by standard)
+    for (const segment of this.segments) {
+      const result = segment.codeToGID.get(code);
+      if (result) {
+        return result;
+      }
+    }
 
+    return 0;
+  }
+
+  public code(gid: number): number[] {
+    const result: number[] = [];
+
+    for (const segment of this.segments) {
+      const segmentResult = segment.gidToCode.get(gid);
+      if (typeof segmentResult !== "undefined") result.push(segmentResult);
+    }
+
+    return result;
+  }
 }

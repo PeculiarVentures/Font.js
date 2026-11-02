@@ -3,7 +3,6 @@ import { SeqStream } from "bytestreamjs";
 import * as font from "../src";
 
 context("HEAD", () => {
-
   it("toStream/fromStream", () => {
     const table = new font.Tables.HEAD({
       version: 65536,
@@ -22,7 +21,7 @@ context("HEAD", () => {
       lowestRecPPEM: 9,
       fontDirectionHint: 2,
       indexToLocFormat: 0,
-      glyphDataFormat: 0
+      glyphDataFormat: 0,
     });
     const stream = new SeqStream();
     table.toStream(stream);
@@ -30,5 +29,4 @@ context("HEAD", () => {
     const parsedTable = font.Tables.HEAD.fromStream(new SeqStream({ buffer: stream.buffer }));
     assert.deepStrictEqual(parsedTable, table);
   });
-
 });

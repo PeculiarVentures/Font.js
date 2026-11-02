@@ -4,7 +4,6 @@ import * as font from "../src";
 // const font = require("./original");
 
 context("MAXP", () => {
-
   it("toStream/fromStream", () => {
     const table = new font.Tables.MAXP({
       version: 65536,
@@ -29,5 +28,4 @@ context("MAXP", () => {
     const parsedTable = font.Tables.MAXP.fromStream(new SeqStream({ buffer: stream.buffer }));
     assert.deepStrictEqual(parsedTable, table);
   });
-
 });

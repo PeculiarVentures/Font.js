@@ -7,7 +7,6 @@ export interface CFF2FDSelectParameters {
 }
 
 export class CFF2FDSelect extends BaseClass {
-
   public format: number;
   public fds: Uint8Array;
 
@@ -25,7 +24,7 @@ export class CFF2FDSelect extends BaseClass {
     //#endregion
 
     //#region Read infomration about format
-    parameters.format = (stream.getBlock(1))[0];
+    parameters.format = stream.getBlock(1)[0];
     //#endregion
 
     switch (parameters.format) {
@@ -36,12 +35,12 @@ export class CFF2FDSelect extends BaseClass {
         {
           //#region Read information about ranges
           const nRanges = stream.getUint16();
-          const range3: { first: number; fd: number; }[] = [];
+          const range3: { first: number; fd: number }[] = [];
 
           for (let i = 0; i < nRanges; i++) {
             const range = {
               first: stream.getUint16(),
-              fd: (stream.getBlock(1))[0],
+              fd: stream.getBlock(1)[0],
             };
 
             range3.push(range);
@@ -51,13 +50,11 @@ export class CFF2FDSelect extends BaseClass {
           //#endregion
 
           //#region Transform ranges to FD information
-          for (let i = 0; i < (range3.length - 1); i++) {
-            for (let j = range3[i].first; j < range3[i + 1].first; j++)
-              parameters.fds[j] = range3[i].fd;
+          for (let i = 0; i < range3.length - 1; i++) {
+            for (let j = range3[i].first; j < range3[i + 1].first; j++) parameters.fds[j] = range3[i].fd;
           }
 
-          for (let j = range3[range3.length - 1].first; j < sentinel; j++)
-            parameters.fds[j] = range3[range3.length - 1].fd;
+          for (let j = range3[range3.length - 1].first; j < sentinel; j++) parameters.fds[j] = range3[range3.length - 1].fd;
           //#endregion
         }
 
@@ -81,13 +78,11 @@ export class CFF2FDSelect extends BaseClass {
           //#endregion
 
           //#region Transform ranges to FD information
-          for (let i = 0; i < (range4.length - 1); i++) {
-            for (let j = range4[i].first; j < range4[i + 1].first; j++)
-              parameters.fds[j] = range4[i].fd;
+          for (let i = 0; i < range4.length - 1; i++) {
+            for (let j = range4[i].first; j < range4[i + 1].first; j++) parameters.fds[j] = range4[i].fd;
           }
 
-          for (let j = range4[range4.length - 1].first; j < sentinel; j++)
-            parameters.fds[j] = range4[range4.length - 1].fd;
+          for (let j = range4[range4.length - 1].first; j < sentinel; j++) parameters.fds[j] = range4[range4.length - 1].fd;
           //#endregion
         }
 
@@ -97,5 +92,4 @@ export class CFF2FDSelect extends BaseClass {
 
     return new CFF2FDSelect(parameters);
   }
-
 }

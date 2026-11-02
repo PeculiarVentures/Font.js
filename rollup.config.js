@@ -1,16 +1,12 @@
 import fs from "fs";
 import typescript from "rollup-plugin-typescript2";
 
-const license = fs.readFileSync("LICENSE", {encoding: "utf-8"});
+const license = fs.readFileSync("LICENSE", { encoding: "utf-8" });
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, no-undef
 const pkg = require("./package.json");
 
-const banner = [
-  "/*!",
-  ...license.split("\n").map(o => ` * ${o}`),
-  " */",
-].join("\n");
+const banner = ["/*!", ...license.split("\n").map((o) => ` * ${o}`), " */"].join("\n");
 const input = "src/index.ts";
 const external = Object.keys(pkg.dependencies);
 
@@ -27,7 +23,7 @@ const main = {
         compilerOptions: {
           removeComments: true,
           module: "ES2015",
-        }
+        },
       },
     }),
   ],
@@ -46,6 +42,4 @@ const main = {
   ],
 };
 
-export default [
-  main,
-];
+export default [main];

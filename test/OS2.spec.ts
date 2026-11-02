@@ -4,7 +4,6 @@ import * as font from "../src";
 // const font = require("./original");
 
 context("OS2", () => {
-
   it("toStream/fromStream", () => {
     const table = new font.Tables.OS2({
       version: 3,
@@ -23,10 +22,7 @@ context("OS2", () => {
       yStrikeoutSize: 102,
       yStrikeoutPosition: 530,
       sFamilyClass: 261,
-      panose: new Uint8Array([
-        2, 2, 6, 3, 5,
-        4, 5, 2, 3, 4
-      ]),
+      panose: new Uint8Array([2, 2, 6, 3, 5, 4, 5, 2, 3, 4]),
       ulUnicodeRange1: 3758108415,
       ulUnicodeRange2: 3221256283,
       ulUnicodeRange3: 9,
@@ -50,9 +46,11 @@ context("OS2", () => {
     });
     const stream = new SeqStream();
     table.toStream(stream);
-    assert.strictEqual(Buffer.from(stream.buffer).toString("hex"), "00030335019000050008059a053300000125059a0533000003a000660212010502020603050405020304e0002effc000785b0000000900000000544d432000400020fffc058cfe460133072101bb400001ffffff00000394054c000000200015");
+    assert.strictEqual(
+      Buffer.from(stream.buffer).toString("hex"),
+      "00030335019000050008059a053300000125059a0533000003a000660212010502020603050405020304e0002effc000785b0000000900000000544d432000400020fffc058cfe460133072101bb400001ffffff00000394054c000000200015",
+    );
     const parsedTable = font.Tables.OS2.fromStream(new SeqStream({ buffer: stream.buffer }));
     assert.deepStrictEqual(parsedTable, table);
   });
-
 });

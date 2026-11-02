@@ -3,26 +3,24 @@ import { BaseClass } from "../../BaseClass";
 import { ItemVariationStore } from "./ItemVariationStore";
 
 export interface VariationStoreDataParameters {
-	itemVariationStore?: ItemVariationStore;
+  itemVariationStore?: ItemVariationStore;
 }
 
 export class VariationStoreData extends BaseClass {
+  public itemVariationStore: ItemVariationStore;
 
-	public itemVariationStore: ItemVariationStore;
+  constructor(parameters: VariationStoreDataParameters = {}) {
+    super();
 
-	constructor(parameters: VariationStoreDataParameters = {}) {
-		super();
+    this.itemVariationStore = parameters.itemVariationStore || new ItemVariationStore();
+  }
 
-		this.itemVariationStore = parameters.itemVariationStore || new ItemVariationStore();
-	}
+  static fromStream(stream: SeqStream) {
+    const parameters: VariationStoreDataParameters = {};
 
-	static fromStream(stream: SeqStream) {
-		const parameters: VariationStoreDataParameters = {};
+    const length = stream.getUint16();
+    parameters.itemVariationStore = ItemVariationStore.fromStream(new SeqStream({ stream: stream.stream.slice(stream.start, stream.start + length) }));
 
-		const length = stream.getUint16();
-		parameters.itemVariationStore = ItemVariationStore.fromStream(new SeqStream({ stream: stream.stream.slice(stream.start, stream.start + length) }));
-
-		return new VariationStoreData(parameters);
-	}
-
+    return new VariationStoreData(parameters);
+  }
 }

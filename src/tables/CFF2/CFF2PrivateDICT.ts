@@ -22,7 +22,6 @@ export interface CFF2PrivateDICTParameters extends DICTParameters {
 }
 
 export class CFF2PrivateDICT extends DICT {
-
   public BlueValues?: number[];
   public OtherBlues?: number[];
   public FamilyBlues?: number[];
@@ -44,38 +43,27 @@ export class CFF2PrivateDICT extends DICT {
   constructor(parameters: CFF2PrivateDICTParameters = {}) {
     super(parameters);
 
-    if ("BlueValues" in parameters)
-      this.BlueValues = parameters.BlueValues;
-    if ("OtherBlues" in parameters)
-      this.OtherBlues = parameters.OtherBlues;
-    if ("FamilyBlues" in parameters)
-      this.FamilyBlues = parameters.FamilyBlues;
-    if ("FamilyOtherBlues" in parameters)
-      this.FamilyOtherBlues = parameters.FamilyOtherBlues;
+    if ("BlueValues" in parameters) this.BlueValues = parameters.BlueValues;
+    if ("OtherBlues" in parameters) this.OtherBlues = parameters.OtherBlues;
+    if ("FamilyBlues" in parameters) this.FamilyBlues = parameters.FamilyBlues;
+    if ("FamilyOtherBlues" in parameters) this.FamilyOtherBlues = parameters.FamilyOtherBlues;
 
     this.BlueScale = parameters.BlueScale || 0.039625;
     this.BlueShift = parameters.BlueShift || 7;
     this.BlueFuzz = parameters.BlueFuzz || 1;
 
-    if ("StdHW" in parameters)
-      this.StdHW = parameters.StdHW;
-    if ("StdVW" in parameters)
-      this.StdVW = parameters.StdVW;
-    if ("SteamSnapH" in parameters)
-      this.SteamSnapH = parameters.SteamSnapH;
-    if ("SteamSnapV" in parameters)
-      this.SteamSnapV = parameters.SteamSnapV;
+    if ("StdHW" in parameters) this.StdHW = parameters.StdHW;
+    if ("StdVW" in parameters) this.StdVW = parameters.StdVW;
+    if ("SteamSnapH" in parameters) this.SteamSnapH = parameters.SteamSnapH;
+    if ("SteamSnapV" in parameters) this.SteamSnapV = parameters.SteamSnapV;
 
     this.LanguageGroup = parameters.LanguageGroup || 0;
     this.ExpansionFactor = parameters.ExpansionFactor || 0.06;
     this.vsindex = parameters.vsindex || 0;
 
-    if ("blend" in parameters)
-      this.blend = parameters.blend;
-    if ("Subrs" in parameters)
-      this.Subrs = parameters.Subrs;
-    if ("SubrsINDEX" in parameters)
-      this.SubrsINDEX = parameters.SubrsINDEX;
+    if ("blend" in parameters) this.blend = parameters.blend;
+    if ("Subrs" in parameters) this.Subrs = parameters.Subrs;
+    if ("SubrsINDEX" in parameters) this.SubrsINDEX = parameters.SubrsINDEX;
   }
 
   static fromBuffer(buffer: ArrayBuffer) {
@@ -84,8 +72,7 @@ export class CFF2PrivateDICT extends DICT {
     const parameters: CFF2PrivateDICTParameters = { entries: dict.entries };
 
     for (const entry of dict.entries) {
-      if (entry.values.length === 0)
-        continue;
+      if (entry.values.length === 0) continue;
 
       switch (entry.key) {
         case 6:
@@ -142,5 +129,4 @@ export class CFF2PrivateDICT extends DICT {
 
     return new CFF2PrivateDICT(parameters);
   }
-
 }
