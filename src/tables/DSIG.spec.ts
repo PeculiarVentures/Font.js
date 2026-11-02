@@ -41,10 +41,23 @@ describe("DSIG", () => {
     assert.strictEqual(record.signatureBlock.signatureLength, signature.length);
     assert.deepStrictEqual(new Uint8Array(record.signatureBlock.signature), signature);
 
-    const signedData = record.signatureBlock.signatureParsed as pkijs.SignedData;
-    assert.instanceOf(signedData, pkijs.SignedData);
+    assert.notProperty(record.signatureBlock, "signatureParsed");
+  });
+
+  it("parses the signature with pkijs as the README shows", () => {
+    const font = Font.fromStream(fixtureStream("FontJSTest-DSIG.ttf"));
+    const dsig = font.tables.get(DSIG.tag) as DSIG;
+
+    // README "DSIG signatures" example
+    const { signature } = dsig.signatureRecords[0].signatureBlock;
+    const contentInfo = pkijs.ContentInfo.fromBER(signature);
+    const signedData = new pkijs.SignedData({ schema: contentInfo.content });
+
+    assert.strictEqual(contentInfo.contentType, pkijs.ContentInfo.SIGNED_DATA);
     assert.lengthOf(signedData.signerInfos, 1);
     assert.lengthOf(signedData.certificates!, 1);
+    const certificate = signedData.certificates![0] as pkijs.Certificate;
+    assert.strictEqual(certificate.subject.typesAndValues[0].value.valueBlock.value, "Font.js test signer");
   });
 
   it("keeps the raw bytes of a signature that isn't CMS", () => {
@@ -54,6 +67,5 @@ describe("DSIG", () => {
     const [record] = dsig.signatureRecords;
     assert.strictEqual(record.signatureBlock.signatureLength, 4);
     assert.deepStrictEqual(new Uint8Array(record.signatureBlock.signature), garbage);
-    assert.isUndefined(record.signatureBlock.signatureParsed);
   });
 });
