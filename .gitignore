@@ -1,8 +1,4 @@
-.idea
-**/node_modules
-build
-.nyc_output
 coverage
-.vs
-docs
+node_modules
+build
 .DS_Store

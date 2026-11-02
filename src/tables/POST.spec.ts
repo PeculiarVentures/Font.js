@@ -1,8 +1,8 @@
-import * as assert from "assert";
+import { describe, it, assert } from "vitest";
 import { SeqStream } from "bytestreamjs";
-import * as font from "../src";
+import * as font from "..";
 
-context("POST", () => {
+describe("POST", () => {
   it("toStream/fromStream", () => {
     const table = new font.Tables.POST({
       version: 196608,

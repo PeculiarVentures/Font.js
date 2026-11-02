@@ -1,9 +1,9 @@
-import * as assert from "assert";
+import { describe, it, assert } from "vitest";
 import { SeqStream } from "bytestreamjs";
-import * as font from "../src";
+import * as font from "..";
 
-context("LOCA", () => {
-  context("toStream/fromStream", () => {
+describe("LOCA", () => {
+  describe("toStream/fromStream", () => {
     it("short", () => {
       const table = new font.Tables.LOCA({
         offsets: [0, 152, 152, 152, 864],

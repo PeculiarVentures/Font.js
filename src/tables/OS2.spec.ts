@@ -1,9 +1,8 @@
-import * as assert from "assert";
+import { describe, it, assert } from "vitest";
 import { SeqStream } from "bytestreamjs";
-import * as font from "../src";
-// const font = require("./original");
+import * as font from "..";
 
-context("OS2", () => {
+describe("OS2", () => {
   it("toStream/fromStream", () => {
     const table = new font.Tables.OS2({
       version: 3,

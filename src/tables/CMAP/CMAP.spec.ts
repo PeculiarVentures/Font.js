@@ -1,11 +1,10 @@
-import * as assert from "assert";
+import { describe, it, assert } from "vitest";
 import { SeqStream } from "bytestreamjs";
-import * as font from "../src";
-import { CMAPPlatformIDs } from "../src/tables/CMAP";
-// const font = require("fontjs");
+import * as font from "../..";
+import { CMAPPlatformIDs } from ".";
 
-context("CMAP", () => {
-  context("Format0", () => {
+describe("CMAP", () => {
+  describe("Format0", () => {
     it("toStream/fromStream", () => {
       const cmap = new font.Tables.CMAP({
         subTables: [
@@ -40,7 +39,7 @@ context("CMAP", () => {
     });
   });
 
-  context("Format4", () => {
+  describe("Format4", () => {
     const cmap = new font.Tables.CMAP({
       subTables: [
         new font.Tables.Format4({
