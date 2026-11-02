@@ -130,12 +130,8 @@ describe("Font with the FontJSTest-Regular.ttf fixture", () => {
     assert.deepStrictEqual(font.stringToGIDsArray("AB A"), [2, 3, 1]);
   });
 
-  it("round-trips the BMP tables through toStream", () => {
+  it("round-trips every table through toStream", () => {
     const font = parse();
-    // Drop the format 12 subtable: see the next spec
-    const cmap = font.tables.get(Tables.CMAP.tag) as fontjs.Tables.CMAP;
-    cmap.subTables = cmap.subTables.filter((subTable) => subTable.format !== 12);
-
     const first = encode(font);
     const again = reparse(first);
 
@@ -154,11 +150,19 @@ describe("Font with the FontJSTest-Regular.ttf fixture", () => {
     assert.deepStrictEqual(new Uint8Array(second.buffer), new Uint8Array(first.buffer));
   });
 
-  it.fails("round-trips a cmap format 12 subtable", () => {
-    const again = reparse(encode(parse()));
+  it("round-trips a cmap format 12 subtable", () => {
+    const font = parse();
+    const again = reparse(encode(font));
 
     const cmap = again.tables.get(Tables.CMAP.tag) as fontjs.Tables.CMAP;
-    assert.strictEqual(cmap.gid(0x1f170, 3, 10), 2);
+    const format12 = cmap.subTables[2] as fontjs.Tables.Format12;
+    assert.strictEqual(format12.format, 12);
+    assert.strictEqual(format12.gid(0x1f170), 2);
+    assert.strictEqual(format12.gid(0x41), 2);
+    assert.strictEqual(format12.gid(0x5a), 0);
+    assert.deepStrictEqual(format12.code(2), [0x41, 0x1f170]);
+    assert.deepStrictEqual(format12.getGlyphMap(), (font.tables.get(Tables.CMAP.tag) as fontjs.Tables.CMAP).subTables[2].getGlyphMap());
+    assert.strictEqual(format12.getGlyphMap().get(0xc0), 5);
   });
 
   it("subsets the font the way @peculiar/pdf-font does", () => {
