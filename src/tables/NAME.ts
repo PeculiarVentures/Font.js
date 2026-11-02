@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { Convert, type TextEncoding } from "pvtsutils";
+import { binary, utf16 } from "@peculiar/utils";
 import { FontTable } from "../Table";
 
 export enum NameIDs {
@@ -231,12 +231,14 @@ export class NAME extends FontTable {
     const record = this.getNameRecord(id, filter);
 
     if (record) {
-      let encoding: TextEncoding = "ascii";
+      const value = new Uint8Array(record.value);
       if (record.platformID === 0 || (record.platformID === 3 && (record.platformSpecificID === 1 || record.platformSpecificID === 10))) {
-        encoding = "utf16be";
+        // Unicode and Windows Unicode BMP / full repertoire: UTF-16BE
+        return utf16.decode(value);
       }
 
-      return Convert.ToUtf8String(new Uint8Array(record.value), encoding);
+      // Other encodings are read one character per byte
+      return binary.encode(value);
     }
 
     return null;
