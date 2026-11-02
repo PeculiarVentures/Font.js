@@ -1,5 +1,3 @@
-import * as asn1js from "asn1js";
-import * as pkijs from "pkijs";
 import { SeqStream } from "bytestreamjs";
 import { FontTable } from "../Table";
 
@@ -7,8 +5,11 @@ export interface SignatureBlock {
   reserved1: number;
   reserved2: number;
   signatureLength: number;
-  signature: Uint8Array;
-  signatureParsed: any;
+  /**
+   * PKCS#7 / CMS `SignedData` (DER) for format 1 signatures. fontjs doesn't
+   * parse it; use a CMS library such as pkijs, see the README.
+   */
+  signature: Uint8Array<ArrayBuffer>;
 }
 
 export interface SignatureRecord {
@@ -63,19 +64,7 @@ export class DSIG extends FontTable {
       signatureRecord.signatureBlock.reserved1 = signatureBlockStream.getUint16();
       signatureRecord.signatureBlock.reserved2 = signatureBlockStream.getUint16();
       signatureRecord.signatureBlock.signatureLength = signatureBlockStream.getUint32();
-      signatureRecord.signatureBlock.signature = signatureBlockStream.getBlock(signatureRecord.signatureBlock.signatureLength);
-
-      //#region Parse CMS SignedData if we can
-      const asn1 = asn1js.fromBER(new Uint8Array(signatureRecord.signatureBlock.signature).buffer);
-      if (asn1.offset !== -1) {
-        try {
-          const contentInfo = new pkijs.ContentInfo({ schema: asn1.result });
-          signatureRecord.signatureBlock.signatureParsed = new pkijs.SignedData({ schema: contentInfo.content });
-        } catch {
-          // nothing
-        }
-      }
-      //#endregion
+      signatureRecord.signatureBlock.signature = new Uint8Array(signatureBlockStream.getBlock(signatureRecord.signatureBlock.signatureLength));
 
       signatureRecords.push(signatureRecord);
     }
