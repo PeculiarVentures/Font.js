@@ -4,6 +4,17 @@ import { getF2Dot14, appendF2Dot14, checkFlag } from "../../common";
 import { CompoundGlyphFlags } from "./CompoundGlyphFlags";
 import { Glyph, GlyphParameters } from "./Glyph";
 
+/**
+ * Reads an unsigned byte as the signed 8-bit value that ARGS_ARE_XY_VALUES byte arguments hold.
+ */
+function toInt8(value: number): number {
+  return value > 0x7f ? value - 0x100 : value;
+}
+
+function isInt8(value: number): boolean {
+  return value >= -0x80 && value <= 0x7f;
+}
+
 export interface ComponentSimple {
   glyphIndex: number;
   flags: number;
@@ -67,14 +78,14 @@ export class CompoundGlyph extends Glyph {
 
           break;
         case !checkFlag(flags, CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS) && checkFlag(flags, CompoundGlyphFlags.ARGS_ARE_XY_VALUES):
-          matrix.e = this.stream.getBlock(1)[0];
-          matrix.f = this.stream.getBlock(1)[0];
+          matrix.e = toInt8(this.stream.getBlock(1)[0]);
+          matrix.f = toInt8(this.stream.getBlock(1)[0]);
 
           break;
         case checkFlag(flags, CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS) && !checkFlag(flags, CompoundGlyphFlags.ARGS_ARE_XY_VALUES):
           matchingPoints = {
-            matchingPoint1: this.stream.getInt16(),
-            matchingPoint2: this.stream.getInt16(),
+            matchingPoint1: this.stream.getUint16(),
+            matchingPoint2: this.stream.getUint16(),
           };
 
           break;
@@ -156,7 +167,7 @@ export class CompoundGlyph extends Glyph {
         } else {
           flags |= CompoundGlyphFlags.ARGS_ARE_XY_VALUES;
 
-          if (component.matrix.e > 255 || component.matrix.e < 0 || component.matrix.f > 255 || component.matrix.f < 0) {
+          if (!isInt8(component.matrix.e) || !isInt8(component.matrix.f)) {
             flags |= CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS;
           } else {
             flags &= ~CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS;
@@ -177,6 +188,15 @@ export class CompoundGlyph extends Glyph {
 
         if (i < this.components.length - 1) {
           flags |= CompoundGlyphFlags.MORE_COMPONENTS;
+        } else {
+          flags &= ~CompoundGlyphFlags.MORE_COMPONENTS;
+        }
+
+        // Instructions follow the last component only when this flag is set on it
+        if (i === this.components.length - 1 && this.instructions.length) {
+          flags |= CompoundGlyphFlags.WE_HAVE_INSTRUCTIONS;
+        } else {
+          flags &= ~CompoundGlyphFlags.WE_HAVE_INSTRUCTIONS;
         }
         //#endregion
         //#region Store information about flags and glyph index first
@@ -191,13 +211,12 @@ export class CompoundGlyph extends Glyph {
 
             break;
           case !checkFlag(flags, CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS) && checkFlag(flags, CompoundGlyphFlags.ARGS_ARE_XY_VALUES):
-            stream.appendView(new Uint8Array([component.matrix.e]));
-            stream.appendView(new Uint8Array([component.matrix.f]));
+            stream.appendView(new Uint8Array(new Int8Array([component.matrix.e, component.matrix.f]).buffer));
 
             break;
           case checkFlag(flags, CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS) && !checkFlag(flags, CompoundGlyphFlags.ARGS_ARE_XY_VALUES):
-            stream.appendInt16((component as ComponentWithPoints).matchingPoint1); // TODO Fix `component as ComponentWithPoints`
-            stream.appendInt16((component as ComponentWithPoints).matchingPoint2);
+            stream.appendUint16((component as ComponentWithPoints).matchingPoint1); // TODO Fix `component as ComponentWithPoints`
+            stream.appendUint16((component as ComponentWithPoints).matchingPoint2);
 
             break;
           case !checkFlag(flags, CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS) && !checkFlag(flags, CompoundGlyphFlags.ARGS_ARE_XY_VALUES):
@@ -230,9 +249,10 @@ export class CompoundGlyph extends Glyph {
       }
       //#endregion
       //#region Store information about instruction
-      stream.appendUint16(this.instructions.length);
-
-      if (this.instructions.length) stream.appendView(new Uint8Array(this.instructions));
+      if (this.instructions.length) {
+        stream.appendUint16(this.instructions.length);
+        stream.appendView(new Uint8Array(this.instructions));
+      }
       //#endregion
     } catch (e) {
       const error = "Failed to execute 'encode' on 'CompoundGlyph";
