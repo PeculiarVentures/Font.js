@@ -43,7 +43,7 @@ export class Glyph extends BaseClass {
     this.yMax ??= parameters.yMax || 0;
   }
 
-  public static get className() {
+  public static override get className() {
     return "Glyph";
   }
 

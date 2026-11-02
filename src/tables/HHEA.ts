@@ -167,11 +167,11 @@ export class HHEA extends FontTable {
     this.numOfLongHorMetrics = parameters.numOfLongHorMetrics || 0;
   }
 
-  public static get tag() {
+  public static override get tag() {
     return 0x68686561;
   }
 
-  public toStream(stream: SeqStream): boolean {
+  public override toStream(stream: SeqStream): boolean {
     stream.appendUint32(this.version);
     stream.appendInt16(this.ascent);
     stream.appendInt16(this.descent);
@@ -193,7 +193,7 @@ export class HHEA extends FontTable {
     return true;
   }
 
-  public static fromStream(stream: SeqStream) {
+  public static override fromStream(stream: SeqStream) {
     const parameters: HHEAParameters = {};
 
     parameters.version = stream.getUint32();

@@ -13,17 +13,17 @@ export class PREP extends FontTable {
     this.values = parameters.values || new Uint8Array();
   }
 
-  public static get tag() {
+  public static override get tag() {
     return 0x70726570;
   }
 
-  public toStream(stream: SeqStream): boolean {
+  public override toStream(stream: SeqStream): boolean {
     stream.appendView(new Uint8Array(this.values));
 
     return true;
   }
 
-  public static fromStream(stream: SeqStream): PREP {
+  public static override fromStream(stream: SeqStream): PREP {
     const parameters: PREPParameters = {};
 
     parameters.values = stream.getBlock(stream.length);

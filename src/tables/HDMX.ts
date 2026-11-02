@@ -23,11 +23,11 @@ export class HDMX extends FontTable {
     this.records = parameters.records || [];
   }
 
-  public static get tag() {
+  public static override get tag() {
     return 0x68646d78;
   }
 
-  public toStream(stream: SeqStream): boolean {
+  public override toStream(stream: SeqStream): boolean {
     try {
       if (this.version !== 0) {
         throw new Error(`Incorrect version for 'hdmx' table: ${this.version}`);
@@ -62,7 +62,7 @@ export class HDMX extends FontTable {
     }
   }
 
-  public static fromStream(stream: SeqStream, numGlyphs: number): HDMX {
+  public static override fromStream(stream: SeqStream, numGlyphs: number): HDMX {
     try {
       const parameters: HDMXParameters = {};
 

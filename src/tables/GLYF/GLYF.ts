@@ -20,15 +20,15 @@ export class GLYF extends FontTable {
     this.glyphs = parameters.glyphs || [];
   }
 
-  public static get className() {
+  public static override get className() {
     return "GLYF";
   }
 
-  public static get tag() {
+  public static override get tag() {
     return 0x676c7966;
   }
 
-  public toStream(stream: SeqStream): boolean {
+  public override toStream(stream: SeqStream): boolean {
     this.loca = [0];
 
     for (const glyph of this.glyphs) {
@@ -70,7 +70,7 @@ export class GLYF extends FontTable {
    * @param loca Reference to 'loca' table
    * @returns Result of the function
    */
-  static fromStream(stream = new SeqStream(), numGlyphs: number, loca: LOCA) {
+  static override fromStream(stream = new SeqStream(), numGlyphs: number, loca: LOCA) {
     //#region Make streams for all glyphs
     if (numGlyphs !== loca.offsets.length - 1) throw new Error(`Inconsistent values: numGlyphs (${numGlyphs}) !== (loca.offsets.length - 1) (${loca.offsets.length - 1})`);
 

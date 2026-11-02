@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { KERNFormat, KERNFormatParameters } from "./Format";
+import { KERNFormat, type KERNFormatParameters } from "./Format";
 
 export interface KERNFormat0Value {
   left: number;
@@ -32,11 +32,11 @@ export class KERNFormat0 extends KERNFormat {
     this.values = parameters.values || [];
   }
 
-  public static get format() {
+  public static override get format() {
     return 0;
   }
 
-  public toStream(stream: SeqStream): boolean {
+  public override toStream(stream: SeqStream): boolean {
     const size = this.map.size;
 
     stream.appendUint16(size);
@@ -62,7 +62,7 @@ export class KERNFormat0 extends KERNFormat {
     return true;
   }
 
-  public static fromStream(stream: SeqStream): KERNFormat0 {
+  public static override fromStream(stream: SeqStream): KERNFormat0 {
     const parameters: KERNFormat0Parameters = {};
 
     parameters.nPairs = stream.getUint16();

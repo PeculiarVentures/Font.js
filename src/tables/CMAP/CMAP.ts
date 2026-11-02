@@ -41,15 +41,15 @@ export class CMAP extends FontTable {
     this.subTables = parameters.subTables || [];
   }
 
-  static get className() {
+  static override get className() {
     return "CMAP";
   }
 
-  static get tag() {
+  static override get tag() {
     return 0x636d6170;
   }
 
-  public toStream(stream: SeqStream): boolean {
+  public override toStream(stream: SeqStream): boolean {
     stream.appendUint16(this.version);
     stream.appendUint16(this.subTables.length); // numTables
 
@@ -101,7 +101,7 @@ export class CMAP extends FontTable {
     return null;
   }
 
-  public static fromStream(stream: SeqStream): CMAP {
+  public static override fromStream(stream: SeqStream): CMAP {
     const version = stream.getUint16();
     const numberSubtables = stream.getUint16();
 
@@ -137,8 +137,7 @@ export class CMAP extends FontTable {
           break;
         case 2: // TODO Format2 is not implemented https://docs.microsoft.com/en-us/typography/opentype/spec/cmap#format-2-high-byte-mapping-through-table
         default:
-          console.log(`Unknown CMAP subtable format - ${format}`); // TODO Don't use console
-        //throw new Error(`Unknown CMAP subtable format - ${format}`);
+        // Unknown formats stop parsing the remaining subtables (see below)
       }
 
       if (!subTable) {

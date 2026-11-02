@@ -25,7 +25,7 @@ export class INDEX<TData = ArrayBuffer> extends BaseClass {
    *
    * @returnsResult of the function
    */
-  public static fromStream(stream: SeqStream, version = 1): INDEX<any> {
+  public static override fromStream(stream: SeqStream, version = 1): INDEX<any> {
     //#region Read INDEX header values
     let count = 0;
 

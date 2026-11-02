@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { KERNFormat, KERNFormatParameters } from "./Format";
+import { KERNFormat, type KERNFormatParameters } from "./Format";
 import { TwoD } from "./TwoD";
 
 export interface KERNTable {
@@ -37,7 +37,7 @@ export class KERNFormat2 extends KERNFormat {
     this.rightTable = parameters.rightTable;
   }
 
-  public static get format() {
+  public static override get format() {
     return 2;
   }
 
@@ -46,7 +46,7 @@ export class KERNFormat2 extends KERNFormat {
    * @param stream
    * @param tableStart
    */
-  public toStream(stream: SeqStream, tableStart: number): boolean {
+  public override toStream(stream: SeqStream, tableStart: number): boolean {
     //#region Initial variables
     const rows = new Map<number, Array<{ right: number; value: number }>>();
     const columns = new Map<number, number>();
@@ -289,7 +289,7 @@ export class KERNFormat2 extends KERNFormat {
    * @param tableStart
    * @param tableLength
    */
-  static fromStream(stream: SeqStream, tableStart: number, tableLength: number): KERNFormat2 {
+  static override fromStream(stream: SeqStream, tableStart: number, tableLength: number): KERNFormat2 {
     const parameters: KERNFormat2Parameters = {};
 
     //#region Initialize "DataView"

@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { Glyph, GlyphParameters } from "./Glyph";
+import { Glyph, type GlyphParameters } from "./Glyph";
 
 export interface EmptyGlyphParameters extends GlyphParameters {}
 
@@ -8,11 +8,11 @@ export class EmptyGlyph extends Glyph {
     super();
   }
 
-  public static get className() {
+  public static override get className() {
     return "EmptyGlyph";
   }
 
-  public decode() {
+  public override decode() {
     super.decode();
 
     if (this.numberOfContours !== 0) {
@@ -20,7 +20,7 @@ export class EmptyGlyph extends Glyph {
     }
   }
 
-  public encode(_stream: SeqStream) {
+  public override encode(_stream: SeqStream) {
     // Nothing should be encoded here
     // TODO Should we use super.encode?
   }

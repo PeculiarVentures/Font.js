@@ -52,11 +52,11 @@ export class KERN extends FontTable {
     this.tables = parameters.tables || [];
   }
 
-  public static get tag() {
+  public static override get tag() {
     return 0x6b65726e;
   }
 
-  public toStream(stream: SeqStream) {
+  public override toStream(stream: SeqStream) {
     switch (this.version) {
       case 0:
         {
@@ -140,7 +140,7 @@ export class KERN extends FontTable {
     return true;
   }
 
-  static fromStream(stream: SeqStream): KERN {
+  static override fromStream(stream: SeqStream): KERN {
     const parameters: KERNParameters = {};
 
     parameters.version = stream.getUint16();

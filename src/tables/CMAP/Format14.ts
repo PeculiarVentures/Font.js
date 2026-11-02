@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { CMAPSubTable, CMAPSubTableParameters, GlyphMap } from "./CMAPSubTable";
+import { CMAPSubTable, type CMAPSubTableParameters, type GlyphMap } from "./CMAPSubTable";
 
 export interface DefaultUVSRecords {
   startUnicodeValue: number;
@@ -43,11 +43,11 @@ export class Format14 extends CMAPSubTable {
     this.varSelectorRecords = parameters.varSelectorRecords || [];
   }
 
-  static get className() {
+  static override get className() {
     return "Format14";
   }
 
-  public static fromStream(stream: SeqStream): Format14 {
+  public static override fromStream(stream: SeqStream): Format14 {
     //#region Read major information
     stream.getUint32(); // length
     const numVarSelectorRecords = stream.getUint32();

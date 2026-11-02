@@ -28,7 +28,7 @@
     "build": "npm run build:module && npm run build:types",
     "build:module": "rollup -c",
     "prebuild:types": "rimraf build/types",
-    "build:types": "tsc -p tsconfig.json --outDir build/types --declaration --emitDeclarationOnly",
+    "build:types": "tsc -p tsconfig.build.json",
     "rebuild": "npm run clear && npm run build",
     "coverage": "vitest run --coverage",
     "format": "oxfmt",
@@ -50,7 +50,7 @@
     "rimraf": "^3.0.2",
     "rollup": "^2.75.3",
     "rollup-plugin-typescript2": "^0.31.2",
-    "typescript": "4.7.2",
+    "typescript": "^6.0.3",
     "vitest": "^5.0.5"
   },
   "dependencies": {

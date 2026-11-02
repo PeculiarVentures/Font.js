@@ -26,7 +26,7 @@ export class CFFCharset extends BaseClass {
    * @param numGlyphs
    * @param stringIndex
    */
-  static fromStream(stream: SeqStream, numGlyphs = 0, stringIndex: StringIndex = new StringIndex()): CFFCharset {
+  static override fromStream(stream: SeqStream, numGlyphs = 0, stringIndex: StringIndex = new StringIndex()): CFFCharset {
     const parameters: CFFCharsetParameters = {};
 
     parameters.charset = [".notdef"];

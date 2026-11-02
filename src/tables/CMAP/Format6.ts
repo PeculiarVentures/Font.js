@@ -1,6 +1,6 @@
 import { SeqStream } from "bytestreamjs";
 import { Glyph } from "../GLYF/Glyph";
-import { CMAPSubTable, CMAPSubTableParameters, GlyphMap } from "./CMAPSubTable";
+import { CMAPSubTable, type CMAPSubTableParameters, type GlyphMap } from "./CMAPSubTable";
 
 export interface Format6Parameters extends CMAPSubTableParameters {
   language?: number;
@@ -32,11 +32,11 @@ export class Format6 extends CMAPSubTable {
     this.glyphIndexArray = parameters.glyphIndexArray || [];
   }
 
-  static get className() {
+  static override get className() {
     return "Format6";
   }
 
-  toStream(stream: SeqStream) {
+  override toStream(stream: SeqStream) {
     stream.appendUint16(6); // CMAP format
     stream.appendUint16(10 + 2 * this.glyphIndexArray.length);
     stream.appendUint16(this.language);
@@ -50,7 +50,7 @@ export class Format6 extends CMAPSubTable {
     return true;
   }
 
-  public static fromStream(stream: SeqStream) {
+  public static override fromStream(stream: SeqStream) {
     stream.getUint16(); // length
 
     const language = stream.getUint16();
@@ -93,7 +93,7 @@ export class Format6 extends CMAPSubTable {
     });
   }
 
-  public gid(code: number): number {
+  public override gid(code: number): number {
     let result = 0;
 
     for (let i = 0; i < this.glyphIndexArray.length; i++) {
@@ -106,7 +106,7 @@ export class Format6 extends CMAPSubTable {
     return result;
   }
 
-  public code(gid: number): number[] {
+  public override code(gid: number): number[] {
     switch (true) {
       case gid > this.glyphIndexArray.length - 1 && gid < 0:
         return [];

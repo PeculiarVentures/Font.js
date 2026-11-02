@@ -14,17 +14,17 @@ export class CVT extends FontTable {
     this.values = parameters.values || [];
   }
 
-  static get tag() {
+  static override get tag() {
     return 0x63767420;
   }
 
-  public toStream(stream: SeqStream) {
+  public override toStream(stream: SeqStream) {
     for (const value of this.values) stream.appendInt16(value);
 
     return true;
   }
 
-  public static fromStream(stream: SeqStream) {
+  public static override fromStream(stream: SeqStream) {
     const parameters: CVTParameters = {};
     parameters.values = [];
 

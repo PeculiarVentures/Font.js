@@ -163,15 +163,15 @@ export interface OS2Parameters {
   /**
    * Indicates the visual weight (degree of blackness or thickness of strokes) of the characters in the font. Values from 1 to 1000 are valid
    */
-  usWeightClass?: OS2Weight;
+  usWeightClass?: number; // OS2Weight values
   /**
    * Indicates a relative change from the normal aspect ratio (width to height ratio) as specified by a font designer for the glyphs in a font
    */
-  usWidthClass?: OS2Width;
+  usWidthClass?: number; // OS2Width values
   /**
    * Indicates font embedding licensing rights for the font
    */
-  fsType?: OS2TypeFlags;
+  fsType?: number; // OS2TypeFlags bits
   /**
    * The recommended horizontal size in font design units for subscripts for this font
    */
@@ -215,7 +215,7 @@ export interface OS2Parameters {
   /**
    * This parameter is a classification of font-family design
    */
-  sFamilyClass?: OS2Family;
+  sFamilyClass?: number; // OS2Family class (high byte) and subclass (low byte)
   /**
    * This 10-byte series of numbers is used to describe the visual characteristics of a given typeface
    */
@@ -243,7 +243,7 @@ export interface OS2Parameters {
   /**
    * Contains information concerning the nature of the font patterns
    */
-  fsSelection?: OS2SelectionFlags;
+  fsSelection?: number; // OS2SelectionFlags bits
   /**
    * The minimum Unicode index (character code) in this font, according to the 'cmap' subtable for platform ID 3 and platform- specific encoding ID 0 or 1
    */
@@ -323,15 +323,15 @@ export class OS2 extends FontTable {
   /**
    * Indicates the visual weight (degree of blackness or thickness of strokes) of the characters in the font. Values from 1 to 1000 are valid
    */
-  usWeightClass: OS2Weight;
+  usWeightClass: number; // OS2Weight values
   /**
    * Indicates a relative change from the normal aspect ratio (width to height ratio) as specified by a font designer for the glyphs in a font
    */
-  usWidthClass: OS2Width;
+  usWidthClass: number; // OS2Width values
   /**
    * Indicates font embedding licensing rights for the font
    */
-  fsType: OS2TypeFlags;
+  fsType: number; // OS2TypeFlags bits
   /**
    * The recommended horizontal size in font design units for subscripts for this font
    */
@@ -375,7 +375,7 @@ export class OS2 extends FontTable {
   /**
    * This parameter is a classification of font-family design
    */
-  sFamilyClass: OS2Family;
+  sFamilyClass: number; // OS2Family class (high byte) and subclass (low byte)
   /**
    * This 10-byte series of numbers is used to describe the visual characteristics of a given typeface
    * @see https://docs.microsoft.com/en-us/typography/opentype/spec/os2#panose
@@ -404,7 +404,7 @@ export class OS2 extends FontTable {
   /**
    * Contains information concerning the nature of the font patterns
    */
-  fsSelection: OS2SelectionFlags;
+  fsSelection: number; // OS2SelectionFlags bits
   /**
    * The minimum Unicode index (character code) in this font, according to the 'cmap' subtable for platform ID 3 and platform- specific encoding ID 0 or 1
    */
@@ -523,11 +523,11 @@ export class OS2 extends FontTable {
     }
   }
 
-  public static get tag() {
+  public static override get tag() {
     return 0x4f532f32;
   }
 
-  public toStream(stream: SeqStream): boolean {
+  public override toStream(stream: SeqStream): boolean {
     stream.appendUint16(this.version);
     stream.appendInt16(this.xAvgCharWidth);
     stream.appendUint16(this.usWeightClass);
@@ -580,7 +580,7 @@ export class OS2 extends FontTable {
     return true;
   }
 
-  public static fromStream(stream: SeqStream) {
+  public static override fromStream(stream: SeqStream) {
     //#region Initial variables
     const parameters: OS2Parameters = {};
     //#endregion

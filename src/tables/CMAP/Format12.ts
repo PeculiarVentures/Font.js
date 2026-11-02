@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { CMAPSubTable, CMAPSubTableParameters, GlyphMap } from "./CMAPSubTable";
+import { CMAPSubTable, type CMAPSubTableParameters, type GlyphMap } from "./CMAPSubTable";
 
 export interface Format12Parameters extends CMAPSubTableParameters {
   language?: number;
@@ -35,11 +35,11 @@ export class Format12 extends CMAPSubTable {
     this.gidToCode = parameters.gidToCode || new Map();
   }
 
-  static get className() {
+  static override get className() {
     return "Format12";
   }
 
-  public static fromStream(stream: SeqStream) {
+  public static override fromStream(stream: SeqStream) {
     //#region Initial variables
     const codeToGID = new Map<number, number>();
     const gidToCode = new Map<number, number[]>();
@@ -74,7 +74,7 @@ export class Format12 extends CMAPSubTable {
     });
   }
 
-  public toStream(stream: SeqStream): boolean {
+  public override toStream(stream: SeqStream): boolean {
     // Group consecutive character codes that map to consecutive glyph IDs
     const groups: [startCharCode: number, endCharCode: number, startGlyphID: number][] = [];
     for (const [code, gid] of [...this.codeToGID].sort((a, b) => a[0] - b[0])) {
@@ -100,11 +100,11 @@ export class Format12 extends CMAPSubTable {
     return true;
   }
 
-  public gid(code: number): number {
+  public override gid(code: number): number {
     return this.codeToGID.get(code) || 0;
   }
 
-  public code(gid: number) {
+  public override code(gid: number) {
     return this.gidToCode.get(gid) || [];
   }
 }

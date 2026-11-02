@@ -23,7 +23,7 @@ export class AttachListTable extends BaseClass {
     this.attachPoints = parameters.attachPoints || [];
   }
 
-  static fromStream(stream: SeqStream) {
+  static override fromStream(stream: SeqStream) {
     const parameters: AttachListTableParameters = {};
     parameters.attachPoints = [];
 

@@ -15,7 +15,7 @@ export class VariationStoreData extends BaseClass {
     this.itemVariationStore = parameters.itemVariationStore || new ItemVariationStore();
   }
 
-  static fromStream(stream: SeqStream) {
+  static override fromStream(stream: SeqStream) {
     const parameters: VariationStoreDataParameters = {};
 
     const length = stream.getUint16();

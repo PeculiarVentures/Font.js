@@ -44,7 +44,7 @@ export class ItemVariationStore extends BaseClass {
     this.variationRegionList = parameters.variationRegionList || {};
   }
 
-  static fromStream(stream: SeqStream) {
+  static override fromStream(stream: SeqStream) {
     const parameters: ItemVariationStoreParameters = {};
 
     parameters.format = stream.getUint16();

@@ -2,18 +2,18 @@ import { SeqStream } from "bytestreamjs";
 import { FontTable } from "../../Table";
 import { AttachListTable } from "./AttachListTable";
 import { ClassDefTable } from "./ClassDefTable";
-import { GDEFParameters, LigCaretListTable } from "./LigCaretListTable";
+import { type GDEFParameters, LigCaretListTable } from "./LigCaretListTable";
 
 export class GDEF extends FontTable {
   constructor(_parameters: GDEFParameters = {}) {
     super();
   }
 
-  static get tag() {
+  static override get tag() {
     return 0x47444546;
   }
 
-  static fromStream(stream: SeqStream) {
+  static override fromStream(stream: SeqStream) {
     //#region Initial variables
     const parameters: GDEFParameters = {};
     //#endregion

@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { INDEXParameters, INDEX } from "../CFF";
+import { type INDEXParameters, INDEX } from "../CFF";
 
 export interface CharstringData {
   operator: string;
@@ -13,7 +13,7 @@ export class CFF2CharstringINDEX extends INDEX<CharstringData> {
     super(parameters);
   }
 
-  public static fromStream(stream: SeqStream): CFF2CharstringINDEX {
+  public static override fromStream(stream: SeqStream): CFF2CharstringINDEX {
     //#region Decode main INDEX values
     const index = INDEX.fromStream(stream, 2);
     //#endregion

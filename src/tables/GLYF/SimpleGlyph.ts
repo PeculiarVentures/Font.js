@@ -1,7 +1,7 @@
 import { SeqStream } from "bytestreamjs";
 import { checkFlag } from "../../common";
 import { SimpleGlyphFlags } from "./SimpleGlyphFlags";
-import { Glyph, GlyphParameters } from "./Glyph";
+import { Glyph, type GlyphParameters } from "./Glyph";
 
 export interface SimpleGlyphParameters extends GlyphParameters {
   endPtsOfContours?: number[];
@@ -28,11 +28,11 @@ export class SimpleGlyph extends Glyph {
     this.yCoordinates ??= parameters.yCoordinates || [];
   }
 
-  public static get className() {
+  public static override get className() {
     return "SimpleGlyph";
   }
 
-  public decode(): void {
+  public override decode(): void {
     super.decode();
 
     //#region Check we have a correct numberOfContours
@@ -140,7 +140,7 @@ export class SimpleGlyph extends Glyph {
     //#endregion
   }
 
-  public encode(stream: SeqStream): void {
+  public override encode(stream: SeqStream): void {
     super.encode(stream);
 
     try {
