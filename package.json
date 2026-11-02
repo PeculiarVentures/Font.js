@@ -30,15 +30,14 @@
     "prebuild:types": "rimraf build/types",
     "build:types": "tsc -p tsconfig.json --outDir build/types --declaration --emitDeclarationOnly",
     "rebuild": "npm run clear && npm run build",
-    "coverage": "nyc npm test",
-    "upgrade": "yarn upgrade-interactive --latest"
+    "coverage": "nyc npm test"
   },
   "keywords": [
     "TrueType"
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/PeculiarVentures/Font.js.git"
+    "url": "https://github.com/PeculiarVentures/Font.js"
   },
   "devDependencies": {
     "@types/mocha": "^9.1.1",
@@ -88,10 +87,5 @@
       "text-summary",
       "html"
     ]
-  },
-  "resolutions": {
-    "ansi-regex": "^5.0.1",
-    "browserslist": "^4.16.5",
-    "minimist": "^1.2.6"
   }
 }

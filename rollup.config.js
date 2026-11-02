@@ -19,6 +19,8 @@ const main = {
   input,
   plugins: [
     typescript({
+      // picomatch 2.3.2 no longer matches the default "**/*.ts+(|x)" glob.
+      include: ["*.ts", "**/*.ts"],
       check: true,
       clean: true,
       tsconfigOverride: {
