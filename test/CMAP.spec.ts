@@ -5,9 +5,7 @@ import { CMAPPlatformIDs } from "../src/tables/CMAP";
 // const font = require("fontjs");
 
 context("CMAP", () => {
-
   context("Format0", () => {
-
     it("toStream/fromStream", () => {
       const cmap = new font.Tables.CMAP({
         subTables: [
@@ -16,7 +14,7 @@ context("CMAP", () => {
             platformSpecificID: 2,
             language: 1,
             glyphIndexArray: [1, 2, 3, 4, 5, 6],
-          })
+          }),
         ],
       });
       const stream = new SeqStream();
@@ -32,16 +30,17 @@ context("CMAP", () => {
         assert.strictEqual(format0.format, 0);
         assert.strictEqual(format0.language, 1);
         assert.deepStrictEqual(format0.glyphIndexArray.length, 256);
-        assert.deepStrictEqual(format0.glyphIndexArray.filter((o: number) => o !== undefined), [1, 2, 3, 4, 5, 6]);
+        assert.deepStrictEqual(
+          format0.glyphIndexArray.filter((o: number) => o !== undefined),
+          [1, 2, 3, 4, 5, 6],
+        );
       } else {
         assert.fail("Wrong format of subTable");
       }
     });
-
   });
 
   context("Format4", () => {
-
     const cmap = new font.Tables.CMAP({
       subTables: [
         new font.Tables.Format4({
@@ -74,9 +73,9 @@ context("CMAP", () => {
               ]),
               delta: 2,
               offset: 1,
-            }
-          ]
-        })
+            },
+          ],
+        }),
       ],
     });
 
@@ -120,7 +119,5 @@ context("CMAP", () => {
         assert.fail("Wrong format of subTable");
       }
     });
-
   });
-
 });

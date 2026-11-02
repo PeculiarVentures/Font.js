@@ -17,8 +17,7 @@ export class CFFCharset extends BaseClass {
 
     this.format = parameters.format || 0;
 
-    if ("charset" in parameters)
-      this.charset = parameters.charset;
+    if ("charset" in parameters) this.charset = parameters.charset;
   }
 
   /**
@@ -31,36 +30,34 @@ export class CFFCharset extends BaseClass {
     const parameters: CFFCharsetParameters = {};
 
     parameters.charset = [".notdef"];
-    parameters.format = (stream.getBlock(1))[0];
+    parameters.format = stream.getBlock(1)[0];
 
     switch (parameters.format) {
       case 0:
         {
-          for (let i = 0; i < (numGlyphs - 1); i++) {
+          for (let i = 0; i < numGlyphs - 1; i++) {
             const value = stream.getUint16();
-            parameters.charset.push((value <= 390) ? StandardStrings[value] : stringIndex.data[value - 391]);
+            parameters.charset.push(value <= 390 ? StandardStrings[value] : stringIndex.data[value - 391]);
           }
         }
         break;
       case 1:
         {
-          while (parameters.charset.length <= (numGlyphs - 1)) {
+          while (parameters.charset.length <= numGlyphs - 1) {
             let value = stream.getUint16();
-            const count = (stream.getBlock(1))[0];
+            const count = stream.getBlock(1)[0];
 
-            for (let j = 0; j <= count; j++, value++)
-              parameters.charset.push((value <= 390) ? StandardStrings[value] : stringIndex.data[value - 391]);
+            for (let j = 0; j <= count; j++, value++) parameters.charset.push(value <= 390 ? StandardStrings[value] : stringIndex.data[value - 391]);
           }
         }
         break;
       case 2:
         {
-          while (parameters.charset.length <= (numGlyphs - 1)) {
+          while (parameters.charset.length <= numGlyphs - 1) {
             let value = stream.getUint16();
             const count = stream.getUint16();
 
-            for (let j = 0; j <= count; j++, value++)
-              parameters.charset.push((value <= 390) ? StandardStrings[value] : stringIndex.data[value - 391]);
+            for (let j = 0; j <= count; j++, value++) parameters.charset.push(value <= 390 ? StandardStrings[value] : stringIndex.data[value - 391]);
           }
         }
         break;
@@ -69,5 +66,4 @@ export class CFFCharset extends BaseClass {
 
     return new CFFCharset(parameters);
   }
-
 }

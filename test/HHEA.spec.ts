@@ -3,7 +3,6 @@ import { SeqStream } from "bytestreamjs";
 import * as font from "../src";
 
 context("HHEA", () => {
-
   it("toStream/fromStream", () => {
     const table = new font.Tables.HHEA({
       version: 65536,
@@ -22,7 +21,7 @@ context("HHEA", () => {
       reserved3: 0,
       reserved4: 0,
       metricDataFormat: 0,
-      numOfLongHorMetrics: 4
+      numOfLongHorMetrics: 4,
     });
     const stream = new SeqStream();
     table.toStream(stream);
@@ -30,5 +29,4 @@ context("HHEA", () => {
     const parsedTable = font.Tables.HHEA.fromStream(new SeqStream({ buffer: stream.buffer }));
     assert.deepStrictEqual(parsedTable, table);
   });
-
 });

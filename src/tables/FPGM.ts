@@ -2,29 +2,27 @@ import { SeqStream } from "bytestreamjs";
 import { FontTable } from "../Table";
 
 export interface FPGMParameters {
-	values?: Uint8Array;
+  values?: Uint8Array;
 }
 
 export class FPGM extends FontTable {
+  public values: Uint8Array;
 
-	public values: Uint8Array;
+  constructor(parameters: FPGMParameters = {}) {
+    super();
 
-	constructor(parameters: FPGMParameters = {}) {
-		super();
+    this.values = parameters.values || new Uint8Array();
+  }
 
-		this.values = parameters.values || new Uint8Array();
-	}
+  public static get tag() {
+    return 0x6670676d;
+  }
 
-	public static get tag() {
-		return 0x6670676D;
-	}
+  public static fromStream(stream: SeqStream) {
+    const parameters: FPGMParameters = {};
 
-	public static fromStream(stream: SeqStream) {
-		const parameters: FPGMParameters = {};
+    parameters.values = stream.getBlock(stream.length);
 
-		parameters.values = stream.getBlock(stream.length);
-
-		return new FPGM(parameters);
-	}
-
+    return new FPGM(parameters);
+  }
 }

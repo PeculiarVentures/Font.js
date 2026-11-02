@@ -2,41 +2,37 @@ import { SeqStream } from "bytestreamjs";
 import { FontTable } from "../Table";
 
 export interface CVTParameters {
-	values?: number[];
+  values?: number[];
 }
 
 export class CVT extends FontTable {
+  public values: number[];
 
-	public values: number[];
+  constructor(parameters: CVTParameters = {}) {
+    super();
 
-	constructor(parameters: CVTParameters = {}) {
-		super();
+    this.values = parameters.values || [];
+  }
 
-		this.values = parameters.values || [];
-	}
+  static get tag() {
+    return 0x63767420;
+  }
 
-	static get tag() {
-		return 0x63767420;
-	}
+  public toStream(stream: SeqStream) {
+    for (const value of this.values) stream.appendInt16(value);
 
-	public toStream(stream: SeqStream) {
-		for (const value of this.values)
-			stream.appendInt16(value);
+    return true;
+  }
 
-		return true;
-	}
+  public static fromStream(stream: SeqStream) {
+    const parameters: CVTParameters = {};
+    parameters.values = [];
 
-	public static fromStream(stream: SeqStream) {
-		const parameters: CVTParameters = {};
-		parameters.values = [];
+    while (stream.length) {
+      const value = stream.getInt16();
+      parameters.values.push(value);
+    }
 
-		while (stream.length) {
-			const value = stream.getInt16();
-			parameters.values.push(value);
-		}
-
-		return new CVT(parameters);
-	}
-
+    return new CVT(parameters);
+  }
 }
-

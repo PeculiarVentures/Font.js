@@ -3,9 +3,7 @@ import { SeqStream } from "bytestreamjs";
 import * as font from "../src";
 
 context("LOCA", () => {
-
   context("toStream/fromStream", () => {
-
     it("short", () => {
       const table = new font.Tables.LOCA({
         offsets: [0, 152, 152, 152, 864],
@@ -29,7 +27,5 @@ context("LOCA", () => {
       const parsedTable = font.Tables.LOCA.fromStream(new SeqStream({ buffer: stream.buffer }), font.Tables.LOCAFormat.long, 4);
       assert.deepStrictEqual(parsedTable, Object.assign(table, { offsets: [0, 152, 152, 152, 864] }));
     });
-
   });
-
 });

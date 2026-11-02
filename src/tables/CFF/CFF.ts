@@ -32,7 +32,7 @@ export class CFF extends FontTable {
       major: headerBlock[0],
       minor: headerBlock[1],
       hdrSize: headerBlock[2],
-      offSize: headerBlock[3]
+      offSize: headerBlock[3],
     };
     //#endregion
 
@@ -69,11 +69,7 @@ export class CFF extends FontTable {
 
       if ("CharStrings" in dict) {
         dict.CharStringsINDEX = INDEX.fromStream(new SeqStream({ stream: stream.stream.slice(dict.CharStrings) }));
-        dict.CharsetParsed = CFFCharset.fromStream(
-          new SeqStream({ stream: stream.stream.slice(dict.charset) }),
-          dict.CharStringsINDEX.data.length,
-          stringIndex
-        );
+        dict.CharsetParsed = CFFCharset.fromStream(new SeqStream({ stream: stream.stream.slice(dict.charset) }), dict.CharStringsINDEX.data.length, stringIndex);
 
         switch (dict.Encoding) {
           case 0:
@@ -93,5 +89,4 @@ export class CFF extends FontTable {
 
     return new CFF({ dicts });
   }
-
 }

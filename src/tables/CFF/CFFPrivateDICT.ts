@@ -135,7 +135,7 @@ export class CFFPrivateDICT extends DICT {
           parameters.SteamSnapV = entry.values;
           break;
         case 1214:
-          parameters.ForceBold = !!(entry.values[0]);
+          parameters.ForceBold = !!entry.values[0];
           break;
         case 1217:
           parameters.LanguageGroup = entry.values[0];
@@ -161,5 +161,4 @@ export class CFFPrivateDICT extends DICT {
 
     return new CFFPrivateDICT(parameters);
   }
-
 }
