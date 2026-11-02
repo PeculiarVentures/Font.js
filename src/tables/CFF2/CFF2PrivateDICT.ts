@@ -1,4 +1,4 @@
-import { DICTParameters, DICT } from "../CFF";
+import { type DICTParameters, DICT } from "../CFF";
 import { CFF2CharstringINDEX } from "./CFF2CharstringINDEX";
 
 export interface CFF2PrivateDICTParameters extends DICTParameters {
@@ -66,7 +66,7 @@ export class CFF2PrivateDICT extends DICT {
     if ("SubrsINDEX" in parameters) this.SubrsINDEX = parameters.SubrsINDEX;
   }
 
-  static fromBuffer(buffer: ArrayBuffer) {
+  static override fromBuffer(buffer: ArrayBuffer) {
     const dict = DICT.fromBuffer(buffer);
 
     const parameters: CFF2PrivateDICTParameters = { entries: dict.entries };

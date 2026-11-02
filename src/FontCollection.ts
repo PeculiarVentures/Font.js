@@ -37,7 +37,7 @@ export class FontCollection extends BaseClass {
     }
   }
 
-  public toStream(stream: SeqStream): boolean {
+  public override toStream(stream: SeqStream): boolean {
     //#region Initial variables
     const offsets: number[] = [];
     const fontStream = new SeqStream();
@@ -84,7 +84,7 @@ export class FontCollection extends BaseClass {
     return true;
   }
 
-  public static fromStream(stream: SeqStream) {
+  public static override fromStream(stream: SeqStream) {
     const result: FontCollectionParameters = {};
 
     result.fonts = [];

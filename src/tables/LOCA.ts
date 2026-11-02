@@ -35,11 +35,11 @@ export class LOCA extends FontTable {
     this.indexToLocFormat = parameters.indexToLocFormat || 0;
   }
 
-  public static get tag() {
+  public static override get tag() {
     return 0x6c6f6361;
   }
 
-  public toStream(stream: SeqStream) {
+  public override toStream(stream: SeqStream) {
     switch (this.indexToLocFormat) {
       case 0:
         for (const offset of this.offsets) stream.appendUint16(offset >> 1);
@@ -62,7 +62,7 @@ export class LOCA extends FontTable {
    * @param indexToLocFormat Value from 'head' table
    * @param numGlyphs Value from 'maxp' table
    */
-  static fromStream(stream: SeqStream, indexToLocFormat: LOCAFormat, numGlyphs: number): LOCA {
+  static override fromStream(stream: SeqStream, indexToLocFormat: LOCAFormat, numGlyphs: number): LOCA {
     const offsets: number[] = [];
 
     switch (indexToLocFormat) {

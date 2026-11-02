@@ -17,7 +17,7 @@ export class ClassDefTable extends BaseClass {
     this.classToGlyph = parameters.classToGlyph || new Map();
   }
 
-  static fromStream(stream: SeqStream) {
+  static override fromStream(stream: SeqStream) {
     const parameters: ClassDefTableParameters = {};
 
     parameters.glyphToClass = new Map();

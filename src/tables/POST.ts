@@ -391,11 +391,11 @@ export class POST extends FontTable {
     }
   }
 
-  static get tag() {
+  static override get tag() {
     return 0x706f7374;
   }
 
-  public toStream(stream: SeqStream): boolean {
+  public override toStream(stream: SeqStream): boolean {
     stream.appendUint32(this.version);
     appendFixed(this.italicAngle, stream);
     stream.appendInt16(this.underlinePosition);
@@ -422,7 +422,7 @@ export class POST extends FontTable {
     return true;
   }
 
-  public static fromStream(stream: SeqStream): POST {
+  public static override fromStream(stream: SeqStream): POST {
     //#region Initial variables
     const parameters: POSTParameters = {};
     //#endregion

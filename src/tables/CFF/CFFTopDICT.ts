@@ -1,7 +1,7 @@
 import { CFFCharset } from "./CFFCharset";
 import { CFFEncoding } from "./CFFEncoding";
 import { CFFPrivateDICT } from "./CFFPrivateDICT";
-import { DICTParameters, DICT } from "./DICT";
+import { type DICTParameters, DICT } from "./DICT";
 import { INDEX } from "./IDX";
 import { StandardStrings } from "./StandardStrings";
 import { StringIndex } from "./StringIndex";
@@ -143,7 +143,7 @@ export class CFFTopDICT extends DICT {
    *
    * @returns Result of the function
    */
-  static fromBuffer(buffer: ArrayBuffer, stringIndex: StringIndex = new StringIndex()): CFFTopDICT {
+  static override fromBuffer(buffer: ArrayBuffer, stringIndex: StringIndex = new StringIndex()): CFFTopDICT {
     const dict = DICT.fromBuffer(buffer);
 
     const parameters: CFFTopDICTParameters = { entries: dict.entries };

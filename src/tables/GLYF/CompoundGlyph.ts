@@ -2,7 +2,7 @@ import { SeqStream } from "bytestreamjs";
 import { Matrix } from "../../Matrix";
 import { getF2Dot14, appendF2Dot14, checkFlag } from "../../common";
 import { CompoundGlyphFlags } from "./CompoundGlyphFlags";
-import { Glyph, GlyphParameters } from "./Glyph";
+import { Glyph, type GlyphParameters } from "./Glyph";
 
 /**
  * Reads an unsigned byte as the signed 8-bit value that ARGS_ARE_XY_VALUES byte arguments hold.
@@ -44,11 +44,11 @@ export class CompoundGlyph extends Glyph {
     this.instructions ??= parameters.instructions || [];
   }
 
-  public static get className() {
+  public static override get className() {
     return "CompoundGlyph";
   }
 
-  public decode() {
+  public override decode() {
     super.decode();
 
     //#region Check we have a correct numberOfContours
@@ -141,7 +141,7 @@ export class CompoundGlyph extends Glyph {
     //#endregion
   }
 
-  public encode(stream: SeqStream): void {
+  public override encode(stream: SeqStream): void {
     super.encode(stream);
 
     try {
@@ -159,7 +159,7 @@ export class CompoundGlyph extends Glyph {
         //#region Set correct "flags" value
         let flags = component.flags;
 
-        if ("matchingPoint1" in component || "matchingPoint2" in component) {
+        if ("matchingPoint1" in component) {
           flags &= ~CompoundGlyphFlags.ARGS_ARE_XY_VALUES;
 
           if (component.matchingPoint1 > 255 || component.matchingPoint1 < 0 || component.matchingPoint2 > 255 || component.matchingPoint2 < 0) flags |= CompoundGlyphFlags.ARG_1_AND_2_ARE_WORDS;

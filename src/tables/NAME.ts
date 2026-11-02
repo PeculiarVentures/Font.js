@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { Convert, TextEncoding } from "pvtsutils";
+import { Convert, type TextEncoding } from "pvtsutils";
 import { FontTable } from "../Table";
 
 export enum NameIDs {
@@ -143,11 +143,11 @@ export class NAME extends FontTable {
     this.nameRecords = parameters.nameRecords || [];
   }
 
-  public static get tag() {
+  public static override get tag() {
     return 0x6e616d65;
   }
 
-  public toStream(stream: SeqStream): boolean {
+  public override toStream(stream: SeqStream): boolean {
     stream.appendUint16(this.format);
     stream.appendUint16(this.nameRecords.length);
     stream.appendUint16(6 + this.nameRecords.length * 12);
@@ -173,7 +173,7 @@ export class NAME extends FontTable {
     return true;
   }
 
-  public static fromStream(stream: SeqStream): NAME {
+  public static override fromStream(stream: SeqStream): NAME {
     const format = stream.getUint16();
     const count = stream.getUint16();
     const stringOffset = stream.getUint16();

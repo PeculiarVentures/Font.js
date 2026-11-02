@@ -1,6 +1,6 @@
 import { SeqStream } from "bytestreamjs";
 import { Glyph } from "../GLYF/Glyph";
-import { CMAPLanguage, CMAPSubTable, CMAPSubTableParameters, GlyphMap } from "./CMAPSubTable";
+import { type CMAPLanguage, CMAPSubTable, type CMAPSubTableParameters, type GlyphMap } from "./CMAPSubTable";
 
 interface Information {
   start: number | null;
@@ -59,11 +59,11 @@ export class Format4 extends CMAPSubTable implements CMAPLanguage {
     return map;
   }
 
-  static get className() {
+  static override get className() {
     return "Format4";
   }
 
-  public toStream(stream: SeqStream): boolean {
+  public override toStream(stream: SeqStream): boolean {
     //#region Initial variables
     const segCountX2 = this.segments.length << 1;
     const searchRange = Math.pow(2, Math.floor(Math.log(this.segments.length) / Math.log(2))) * 2;
@@ -187,7 +187,7 @@ export class Format4 extends CMAPSubTable implements CMAPLanguage {
     return true;
   }
 
-  public static fromStream(stream: SeqStream): Format4 {
+  public static override fromStream(stream: SeqStream): Format4 {
     //#region Read major information
     stream.getUint16(); // length
 
@@ -352,7 +352,7 @@ export class Format4 extends CMAPSubTable implements CMAPLanguage {
     });
   }
 
-  public gid(code: number): number {
+  public override gid(code: number): number {
     // Replace absent chars via GID = 0 (as it is required by standard)
     for (const segment of this.segments) {
       const result = segment.codeToGID.get(code);
@@ -364,7 +364,7 @@ export class Format4 extends CMAPSubTable implements CMAPLanguage {
     return 0;
   }
 
-  public code(gid: number): number[] {
+  public override code(gid: number): number[] {
     const result: number[] = [];
 
     for (const segment of this.segments) {

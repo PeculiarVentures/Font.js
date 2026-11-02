@@ -14,7 +14,7 @@ export class LigCaretListTable extends BaseClass {
     super();
   }
 
-  static fromStream(stream: SeqStream) {
+  static override fromStream(stream: SeqStream) {
     const parameters: LigCaretListTableParameters = {};
 
     parameters.coverageOffset = stream.getUint16();

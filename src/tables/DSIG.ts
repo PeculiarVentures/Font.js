@@ -39,11 +39,11 @@ export class DSIG extends FontTable {
     this.signatureRecords = parameters.signatureRecords || [];
   }
 
-  static get tag() {
+  static override get tag() {
     return 0x44534947;
   }
 
-  static fromStream(stream: SeqStream) {
+  static override fromStream(stream: SeqStream) {
     const version = stream.getUint32();
     const numSignatures = stream.getUint16();
     const flags = stream.getUint16();

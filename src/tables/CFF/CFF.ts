@@ -20,11 +20,11 @@ export class CFF extends FontTable {
     this.dicts = parameters.dicts || [];
   }
 
-  static get tag() {
+  static override get tag() {
     return 0x43464620;
   }
 
-  static fromStream(stream: SeqStream) {
+  static override fromStream(stream: SeqStream) {
     //#region Read header information
     const headerBlock = stream.getBlock(4);
 

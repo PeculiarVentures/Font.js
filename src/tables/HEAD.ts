@@ -109,7 +109,7 @@ export interface HEADParameters {
   /**
    * Flags
    */
-  flags?: HEADFlags;
+  flags?: number; // HEADFlags bits
   /**
    * Set to a value from 16 to 16384
    */
@@ -141,7 +141,7 @@ export interface HEADParameters {
   /**
    * mac style
    */
-  macStyle?: HEADMacStyleFlags;
+  macStyle?: number; // HEADMacStyleFlags bits
   /**
    * Smallest readable size in pixels
    */
@@ -180,7 +180,7 @@ export class HEAD extends FontTable {
   /**
    * Flags
    */
-  public flags: HEADFlags;
+  public flags: number; // HEADFlags bits
   /**
    * Set to a value from 16 to 16384
    */
@@ -210,7 +210,7 @@ export class HEAD extends FontTable {
   /**
    * mac style
    */
-  public macStyle: HEADMacStyleFlags;
+  public macStyle: number; // HEADMacStyleFlags bits
   /**
    * Smallest readable size in pixels
    */
@@ -250,11 +250,11 @@ export class HEAD extends FontTable {
     this.glyphDataFormat = parameters.glyphDataFormat || 0;
   }
 
-  public static get tag() {
+  public static override get tag() {
     return 0x68656164;
   }
 
-  public toStream(stream: SeqStream): boolean {
+  public override toStream(stream: SeqStream): boolean {
     stream.appendUint32(this.version);
     stream.appendUint32(this.fontRevision);
 
@@ -280,7 +280,7 @@ export class HEAD extends FontTable {
     return true;
   }
 
-  public static fromStream(stream: SeqStream): HEAD {
+  public static override fromStream(stream: SeqStream): HEAD {
     const parameters: HEADParameters = {};
 
     parameters.version = stream.getUint32();

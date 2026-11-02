@@ -1,4 +1,4 @@
-import { INDEXParameters } from "./IDX";
+import { type INDEXParameters } from "./IDX";
 
 export interface DICTEntry {
   key: number;

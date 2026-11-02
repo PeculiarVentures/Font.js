@@ -14,11 +14,11 @@ export class FPGM extends FontTable {
     this.values = parameters.values || new Uint8Array();
   }
 
-  public static get tag() {
+  public static override get tag() {
     return 0x6670676d;
   }
 
-  public static fromStream(stream: SeqStream) {
+  public static override fromStream(stream: SeqStream) {
     const parameters: FPGMParameters = {};
 
     parameters.values = stream.getBlock(stream.length);

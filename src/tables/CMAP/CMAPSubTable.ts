@@ -78,7 +78,7 @@ export abstract class CMAPSubTable extends BaseClass {
     this.platformSpecificID = parameters.platformSpecificID || 0;
   }
 
-  public static get className(): string {
+  public static override get className(): string {
     return "CMAPSubTable";
   }
 

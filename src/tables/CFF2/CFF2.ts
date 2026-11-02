@@ -50,11 +50,11 @@ export class CFF2 extends FontTable {
     }
   }
 
-  static get tag() {
+  static override get tag() {
     return 0x43464632;
   }
 
-  static fromStream(stream: SeqStream): CFF2 {
+  static override fromStream(stream: SeqStream): CFF2 {
     //#region Initial variables
     const parameters: CFF2Parameters = {};
     //#endregion

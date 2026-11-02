@@ -44,11 +44,11 @@ export class GASP extends FontTable {
     this.gaspRanges = parameters.gaspRanges || [];
   }
 
-  public static get tag() {
+  public static override get tag() {
     return 0x67617370;
   }
 
-  public toStream(stream: SeqStream) {
+  public override toStream(stream: SeqStream) {
     stream.appendUint16(this.version);
     stream.appendUint16(this.gaspRanges.length);
 
@@ -60,7 +60,7 @@ export class GASP extends FontTable {
     return true;
   }
 
-  static fromStream(stream: SeqStream) {
+  static override fromStream(stream: SeqStream) {
     const version = stream.getUint16();
     const numRanges = stream.getUint16();
     const gaspRanges: GASPRange[] = [];

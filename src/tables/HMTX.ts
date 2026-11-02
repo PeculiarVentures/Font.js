@@ -44,11 +44,11 @@ export class HMTX extends FontTable {
     this.leftSideBearings = parameters.leftSideBearings || [];
   }
 
-  public static get tag() {
+  public static override get tag() {
     return 0x686d7478;
   }
 
-  public toStream(stream: SeqStream) {
+  public override toStream(stream: SeqStream) {
     for (const hMetric of this.hMetrics) {
       stream.appendUint16(hMetric.advanceWidth);
       stream.appendInt16(hMetric.leftSideBearing);
@@ -67,7 +67,7 @@ export class HMTX extends FontTable {
    * @param numGlyphs The value is found in the 'maxp' table
    * @param numOfLongHorMetrics The value is found in the 'hhea' (Horizontal Header) table
    */
-  static fromStream(stream: SeqStream, numGlyphs: number, numOfLongHorMetrics: number) {
+  static override fromStream(stream: SeqStream, numGlyphs: number, numOfLongHorMetrics: number) {
     const parameters: HMTXParameters = {};
 
     parameters.hMetrics = [];

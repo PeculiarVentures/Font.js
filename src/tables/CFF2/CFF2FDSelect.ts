@@ -17,7 +17,7 @@ export class CFF2FDSelect extends BaseClass {
     this.fds = parameters.fds || new Uint8Array();
   }
 
-  static fromStream(stream: SeqStream, nGlyphs = 0) {
+  static override fromStream(stream: SeqStream, nGlyphs = 0) {
     //#region Initial variables
     const parameters: CFF2FDSelectParameters = {};
     parameters.fds = new Uint8Array();

@@ -20,7 +20,7 @@ export class CoverageTable extends BaseClass {
     super();
   }
 
-  static fromStream(stream: SeqStream) {
+  static override fromStream(stream: SeqStream) {
     const parameters: CoverageTableParameters = {};
 
     parameters.coverageFormat = stream.getUint16();

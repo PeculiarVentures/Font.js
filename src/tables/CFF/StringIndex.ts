@@ -1,5 +1,5 @@
 import { SeqStream } from "bytestreamjs";
-import { INDEXParameters, INDEX } from "./IDX";
+import { type INDEXParameters, INDEX } from "./IDX";
 
 export interface StringIndexParameters extends INDEXParameters<string> {}
 
@@ -8,7 +8,7 @@ export class StringIndex extends INDEX<string> {
     super(params);
   }
 
-  static fromStream(stream: SeqStream, version = 1): StringIndex {
+  static override fromStream(stream: SeqStream, version = 1): StringIndex {
     const index = INDEX.fromStream(stream, version);
 
     const data = index.data.map((o) => String.fromCharCode(...new Uint8Array(o)));

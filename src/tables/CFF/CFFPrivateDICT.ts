@@ -1,4 +1,4 @@
-import { DICTParameters, DICT } from "./DICT";
+import { type DICTParameters, DICT } from "./DICT";
 
 export interface CFFPrivateDICTParameters extends DICTParameters {
   BlueValues?: number[];
@@ -94,7 +94,7 @@ export class CFFPrivateDICT extends DICT {
    *
    * @returns Result of the function
    */
-  static fromBuffer(buffer: ArrayBuffer) {
+  static override fromBuffer(buffer: ArrayBuffer) {
     const dict = DICT.fromBuffer(buffer);
 
     const parameters: CFFPrivateDICTParameters = { entries: dict.entries };

@@ -21,7 +21,7 @@ export class CFFEncoding extends BaseClass {
    * Convert SeqStream data to object
    * @param stream
    */
-  static fromStream(stream: SeqStream) {
+  static override fromStream(stream: SeqStream) {
     const parameters: CFFEncodingParameters = {};
 
     parameters.encoding = {};

@@ -19,10 +19,14 @@ const main = {
       include: ["*.ts", "**/*.ts"],
       check: true,
       clean: true,
+      tsconfig: "tsconfig.build.json",
       tsconfigOverride: {
         compilerOptions: {
           removeComments: true,
           module: "ES2015",
+          // rpt2 forces the deprecated moduleResolution "node10"
+          ignoreDeprecations: "6.0",
+          emitDeclarationOnly: false,
         },
       },
     }),

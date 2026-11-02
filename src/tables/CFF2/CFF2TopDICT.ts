@@ -1,4 +1,4 @@
-import { DICTParameters, DICT } from "../CFF";
+import { type DICTParameters, DICT } from "../CFF";
 
 export interface CFF2TopDICTParameters extends DICTParameters {
   FontMatrix?: number[];
@@ -26,7 +26,7 @@ export class CFF2TopDICT extends DICT {
     if ("vstore" in parameters) this.vstore = parameters.vstore;
   }
 
-  static fromBuffer(buffer: ArrayBuffer) {
+  static override fromBuffer(buffer: ArrayBuffer) {
     const dict = DICT.fromBuffer(buffer);
 
     const parameters: CFF2TopDICTParameters = { entries: dict.entries };

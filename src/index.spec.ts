@@ -168,7 +168,7 @@ describe("Font with the FontJSTest-Regular.ttf fixture", () => {
   it("subsets the font the way @peculiar/pdf-font does", () => {
     const font = parse();
     // subset() adds the missing and null glyphs itself
-    const gids = [...new Set([..."BA"].map((char) => font.findUnicodeGlyph(char)!.index))];
+    const gids = [...new Set([..."BA"].map((char) => font.findUnicodeGlyph(char)!.index!))];
 
     const head = font.tables.get(Tables.HEAD.tag) as fontjs.Tables.HEAD;
     const hhea = font.tables.get(Tables.HHEA.tag) as fontjs.Tables.HHEA;

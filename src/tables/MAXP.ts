@@ -163,7 +163,7 @@ export class MAXP extends FontTable {
     }
   }
 
-  public static get tag() {
+  public static override get tag() {
     return 0x6d617870;
   }
 
@@ -279,7 +279,7 @@ export class MAXP extends FontTable {
     this.maxComponentElements = referencedGlyphs.size;
   }
 
-  public toStream(stream: SeqStream): boolean {
+  public override toStream(stream: SeqStream): boolean {
     stream.appendUint32(this.version);
     stream.appendUint16(this.numGlyphs);
 
@@ -314,7 +314,7 @@ export class MAXP extends FontTable {
     return true;
   }
 
-  public static fromStream(stream: SeqStream): MAXP {
+  public static override fromStream(stream: SeqStream): MAXP {
     const version = stream.getUint32();
     const numGlyphs = stream.getUint16();
 

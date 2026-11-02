@@ -2,7 +2,7 @@ import { SeqStream } from "bytestreamjs";
 import { unicodePointsToCodePoints, stringToCodePoints } from "./common";
 import { BaseClass } from "./BaseClass";
 import * as Tables from "./tables";
-import { Glyph, GlyphMap, missingGlyph, nullGlyph } from "./tables";
+import { Glyph, type GlyphMap, missingGlyph, nullGlyph } from "./tables";
 
 export enum ScalerTypes {
   true = 0x74727565,
@@ -137,7 +137,7 @@ export class Font extends BaseClass {
     return glyph || null;
   }
 
-  public toStream(stream: SeqStream, streamOffset = 0): boolean {
+  public override toStream(stream: SeqStream, streamOffset = 0): boolean {
     //#region Initial variables
     let tablesData = new Map();
 
@@ -304,7 +304,7 @@ export class Font extends BaseClass {
     return true;
   }
 
-  public static fromStream(stream: SeqStream): Font {
+  public static override fromStream(stream: SeqStream): Font {
     //#region Initial variables
     const warnings: string[] = [];
     let headCheckSum = 0;
