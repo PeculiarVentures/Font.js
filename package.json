@@ -32,7 +32,8 @@
     "rebuild": "npm run clear && npm run build",
     "coverage": "vitest run --coverage",
     "format": "oxfmt",
-    "format:check": "oxfmt --check"
+    "format:check": "oxfmt --check",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "TrueType"
