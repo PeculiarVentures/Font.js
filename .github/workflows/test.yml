@@ -1,6 +1,9 @@
-name: Node.js CI
+name: Test
 
-on: [push, pull_request]
+# Pushes to master are tested by Publish, which calls this workflow before release-please.
+on:
+  pull_request:
+  workflow_call:
 
 jobs:
   build:
@@ -23,6 +26,15 @@ jobs:
 
       - name: Check formatting
         run: npm run format:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build package
+        run: npm run build
+
+      - name: Check generated package exports are committed
+        run: git diff --exit-code package.json
 
       - name: Run test with coverage
         run: npm run coverage
