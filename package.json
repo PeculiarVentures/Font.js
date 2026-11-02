@@ -1,6 +1,6 @@
 {
   "name": "fontjs",
-  "version": "3.0.1",
+  "version": "4.0.0",
   "description": "Parse, edit, subset and write TrueType fonts",
   "type": "module",
   "sideEffects": false,
