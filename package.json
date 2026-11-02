@@ -1,9 +1,16 @@
 {
   "name": "fontjs",
   "version": "3.0.1",
-  "description": "FontJS (Font.js) is a packages for TrueType font parsing and manipulation",
+  "description": "Parse, edit, subset and write TrueType fonts",
   "type": "module",
   "sideEffects": false,
+  "main": "./build/index.js",
+  "module": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "exports": {
+    ".": "./build/index.js",
+    "./package.json": "./package.json"
+  },
   "files": [
     "build/",
     "README.md",
@@ -24,7 +31,14 @@
     "format:check": "oxfmt --check"
   },
   "keywords": [
-    "TrueType"
+    "font",
+    "truetype",
+    "ttf",
+    "opentype",
+    "sfnt",
+    "cmap",
+    "glyf",
+    "subset"
   ],
   "author": {
     "email": "yury@strozhevsky.com",
@@ -41,6 +55,16 @@
     "type": "git",
     "url": "https://github.com/PeculiarVentures/Font.js"
   },
+  "bugs": {
+    "url": "https://github.com/PeculiarVentures/Font.js/issues"
+  },
+  "homepage": "https://github.com/PeculiarVentures/Font.js#readme",
+  "peerDependencies": {
+    "bytestreamjs": "^3.0.0"
+  },
+  "dependencies": {
+    "@peculiar/utils": "^4.1.0"
+  },
   "devDependencies": {
     "@arethetypeswrong/core": "^0.18.5",
     "@types/node": "^26.6.6",
@@ -53,22 +77,5 @@
     "tsdown": "^0.23.4",
     "typescript": "^6.0.3",
     "vitest": "^5.0.5"
-  },
-  "bugs": {
-    "url": "https://github.com/PeculiarVentures/Font.js/issues"
-  },
-  "homepage": "https://github.com/PeculiarVentures/Font.js#readme",
-  "main": "./build/index.js",
-  "module": "./build/index.js",
-  "types": "./build/index.d.ts",
-  "exports": {
-    ".": "./build/index.js",
-    "./package.json": "./package.json"
-  },
-  "peerDependencies": {
-    "bytestreamjs": "^3.0.0"
-  },
-  "dependencies": {
-    "@peculiar/utils": "^4.1.0"
   }
 }
