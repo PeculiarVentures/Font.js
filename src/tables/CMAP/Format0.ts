@@ -75,9 +75,9 @@ export class Format0 extends CMAPSubTable implements CMAPLanguage {
 	/**
 	 * Make Format0 table directly from array of code points
 	 * @param language
-	 * @param glyphs Array of glyphs
+	 * @param _glyphs Array of glyphs (unused)
 	 */
-	static fromGlyphs(language: number, glyphs: Glyph[]) {
+	static fromGlyphs(language: number, _glyphs: Glyph[]) {
 		return new Format0({
 			language,
 			// TODO glyphIndexArray: ???

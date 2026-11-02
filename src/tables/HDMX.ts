@@ -39,14 +39,14 @@ export class HDMX extends FontTable {
 
 			//#region Set correct "sizeDeviceRecord" aligned to long
 			const sizeDeviceRecordControl = (this.records[0].widths.length + 2);
-			let sizeDeviceRecordPadding = [];
+			let sizeDeviceRecordPadding = 0;
 
 			if (sizeDeviceRecordControl % 4)
-				sizeDeviceRecordPadding = new Array(4 - (sizeDeviceRecordControl % 4));
+				sizeDeviceRecordPadding = 4 - (sizeDeviceRecordControl % 4);
 			//#endregion
 
 			if (this.records.length)
-				stream.appendInt32(this.records[0].widths.length + 2 + sizeDeviceRecordPadding.length);
+				stream.appendInt32(this.records[0].widths.length + 2 + sizeDeviceRecordPadding);
 			else
 				stream.appendInt32(0);
 

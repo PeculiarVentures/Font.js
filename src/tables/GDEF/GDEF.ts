@@ -6,7 +6,7 @@ import { GDEFParameters, LigCaretListTable } from "./LigCaretListTable";
 
 export class GDEF extends FontTable {
 
-	constructor(parameters: GDEFParameters = {}) {
+	constructor(_parameters: GDEFParameters = {}) {
 		super();
 	}
 

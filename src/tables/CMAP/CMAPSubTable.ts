@@ -1,5 +1,4 @@
 import { BaseClass } from "../../BaseClass";
-import { Glyph } from "../GLYF";
 
 export interface CMAPSubTableParameters {
 	platformID?: CMAPPlatformIDs;
@@ -100,17 +99,17 @@ export abstract class CMAPSubTable extends BaseClass {
 
 	/**
 	 * Return character code by GID
-	 * @param gid Glyph index (GID)
+	 * @param _gid Glyph index (GID)
 	 */
-	public code(gid: number): any[] {
+	public code(_gid: number): any[] {
 		throw new Error("Method not implemented.");
 	}
 
 	/**
 	 * Return GID by character code
-	 * @param code Character code
+	 * @param _code Character code
 	 */
-	public gid(code: number): number {
+	public gid(_code: number): number {
 		throw new Error("Method not implemented.");
 	}
 

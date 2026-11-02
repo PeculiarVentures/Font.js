@@ -6,7 +6,7 @@ export interface EmptyGlyphParameters extends GlyphParameters {
 
 export class EmptyGlyph extends Glyph {
 
-	constructor(parameters: EmptyGlyphParameters = {}) {
+	constructor(_parameters: EmptyGlyphParameters = {}) {
 		super();
 	}
 
@@ -22,7 +22,7 @@ export class EmptyGlyph extends Glyph {
 		}
 	}
 
-	public encode(stream: SeqStream) {
+	public encode(_stream: SeqStream) {
 		// Nothing should be encoded here
 		// TODO Should we use super.encode?
 	}

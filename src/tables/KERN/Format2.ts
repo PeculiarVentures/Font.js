@@ -116,7 +116,7 @@ export class KERNFormat2 extends KERNFormat {
 		const array: number[][] = [];
 
 		for (const value of rows.values()) {
-			const arrayValue = new Array<number>(columns.size);
+			const arrayValue = Array.from<number>({ length: columns.size });
 			arrayValue.fill(0);
 
 			for (const element of value) {

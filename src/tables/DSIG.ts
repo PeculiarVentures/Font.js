@@ -73,7 +73,7 @@ export class DSIG extends FontTable {
 				try {
 					const contentInfo = new pkijs.ContentInfo({ schema: asn1.result });
 					signatureRecord.signatureBlock.signatureParsed = new pkijs.SignedData({ schema: contentInfo.content });
-				} catch (ex) {
+				} catch {
 					// nothing
 				}
 			}

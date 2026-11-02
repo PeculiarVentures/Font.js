@@ -12,7 +12,7 @@ export interface LigCaretListTableParameters {
 
 export class LigCaretListTable extends BaseClass {
 
-	public constructor(parameters: LigCaretListTableParameters = {}) {
+	public constructor(_parameters: LigCaretListTableParameters = {}) {
 		super();
 	}
 

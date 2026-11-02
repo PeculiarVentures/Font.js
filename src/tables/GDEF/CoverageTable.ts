@@ -18,7 +18,7 @@ export interface CoverageTableParameters {
 
 export class CoverageTable extends BaseClass {
 
-	public constructor(parameters: CoverageTableParameters = {}) {
+	public constructor(_parameters: CoverageTableParameters = {}) {
 		super();
 	}
 

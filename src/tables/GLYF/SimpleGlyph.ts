@@ -37,7 +37,7 @@ export class SimpleGlyph extends Glyph {
 		super.decode();
 
 		//#region Check we have a correct numberOfContours
-		if ((this.numberOfContours === 0) || (this.numberOfContours < 0)) {
+		if (this.numberOfContours <= 0) {
 			throw new Error(`Incorrect numberOfContours for SimpleGlyph class: ${this.numberOfContours}`);
 		}
 		//#endregion

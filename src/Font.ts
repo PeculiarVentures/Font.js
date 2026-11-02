@@ -1006,32 +1006,30 @@ export class Font extends BaseClass {
 		//#endregion
 
 		//#region Make CMAP table
-		// TODO Strange condition
-		if (parameters.cmaps !== []) { // Have an ability to skip CMAP making
-			const subTables: Tables.CMAPSubTable[] = [];
+		// An empty `cmaps` array still produces an (empty) CMAP table.
+		const subTables: Tables.CMAPSubTable[] = [];
 
-			for (const cmap of parameters.cmaps) {
+		for (const cmap of parameters.cmaps) {
 
-				switch (cmap.format) {
-					case 0:
-						subTables.push(Tables.Format0.fromGlyphs(cmap.language, glyphs));
-						break;
-					case 4:
-						subTables.push(Tables.Format4.fromGlyphs(cmap.language, glyphs, cmap.platformID, cmap.platformSpecificID));
-						break;
-					case 6:
-						subTables.push(Tables.Format6.fromGlyphs(cmap.language, glyphs, cmap.firstCode, cmap.platformID, cmap.platformSpecificID));
-						break;
-					default:
-						throw new Error(`Unknown CMAP table format: ${cmap}`);
-				}
-
+			switch (cmap.format) {
+				case 0:
+					subTables.push(Tables.Format0.fromGlyphs(cmap.language, glyphs));
+					break;
+				case 4:
+					subTables.push(Tables.Format4.fromGlyphs(cmap.language, glyphs, cmap.platformID, cmap.platformSpecificID));
+					break;
+				case 6:
+					subTables.push(Tables.Format6.fromGlyphs(cmap.language, glyphs, cmap.firstCode, cmap.platformID, cmap.platformSpecificID));
+					break;
+				default:
+					throw new Error(`Unknown CMAP table format: ${cmap}`);
 			}
 
-			tables.set(Tables.CMAP.tag, new Tables.CMAP({
-				subTables
-			}));
 		}
+
+		tables.set(Tables.CMAP.tag, new Tables.CMAP({
+			subTables
+		}));
 		//#endregion
 
 		return new Font({
@@ -1187,8 +1185,8 @@ export class Font extends BaseClass {
 	/**
 	 *
 	 * @param str
-	 * @param platformID
-	 * @param platformSpecificID
+	 * @param _platformID Unused, kept for API compatibility
+	 * @param _platformSpecificID Unused, kept for API compatibility
 	 * @param bytes String representing bytes template ("00", "0000" etc.)
 	 */
 	public stringToGIDs(str: string, platformID = 3, platformSpecificID = 1, bytes: string | null = null): string[] {
@@ -1242,10 +1240,10 @@ export class Font extends BaseClass {
 	/**
 	 * Return array GID (as array of GIDs) for particular string
 	 * @param str
-	 * @param platformID
-	 * @param platformSpecificID
+	 * @param _platformID Unused, kept for API compatibility
+	 * @param _platformSpecificID Unused, kept for API compatibility
 	 */
-	stringToGIDsArray(str: string, platformID = 3, platformSpecificID = 1) {
+	stringToGIDsArray(str: string, _platformID = 3, _platformSpecificID = 1) {
 		const result = new Map();
 
 		//#region Get CMAP table reference

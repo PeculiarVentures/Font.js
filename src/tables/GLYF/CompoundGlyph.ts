@@ -42,7 +42,7 @@ export class CompoundGlyph extends Glyph {
 		super.decode();
 
 		//#region Check we have a correct numberOfContours
-		if ((this.numberOfContours === 0) || (this.numberOfContours > 0))
+		if (this.numberOfContours >= 0)
 			throw new Error(`Incorrect numberOfContours for CompoundGlyph class: ${this.numberOfContours}`);
 		//#endregion
 		//#region Initial variables
@@ -114,7 +114,7 @@ export class CompoundGlyph extends Glyph {
 				glyphIndex,
 				flags,
 				matrix,
-				...(matchingPoints || {})
+				...matchingPoints
 			};
 
 			this.components.push(
@@ -153,7 +153,7 @@ export class CompoundGlyph extends Glyph {
 				//#region Set correct "flags" value
 				let flags = component.flags;
 
-				if (("matchingPoint1" in component) || ("matchingPoint1" in component)) {
+				if (("matchingPoint1" in component) || ("matchingPoint2" in component)) {
 					flags &= ~CompoundGlyphFlags.ARGS_ARE_XY_VALUES;
 
 					if ((component.matchingPoint1 > 255) ||
