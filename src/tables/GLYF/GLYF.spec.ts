@@ -1,8 +1,8 @@
-import * as assert from "assert";
+import { describe, it, assert } from "vitest";
 import { SeqStream } from "bytestreamjs";
-import * as font from "../src";
+import * as font from "../..";
 
-context("GLYF", () => {
+describe("GLYF", () => {
   it("toStream/fromStream", () => {
     const table = new font.Tables.GLYF({
       glyphs: [
@@ -42,7 +42,7 @@ context("GLYF", () => {
     assert.strictEqual(parsedTable.glyphs[1] instanceof font.Tables.SimpleGlyph, true);
   });
 
-  context("EmptyGlyph", () => {
+  describe("EmptyGlyph", () => {
     it("encode/decode", () => {
       const glyph = new font.Tables.EmptyGlyph({
         numberOfContours: 0,
@@ -63,7 +63,7 @@ context("GLYF", () => {
     });
   });
 
-  context("SimpleGlyph", () => {
+  describe("SimpleGlyph", () => {
     it("encode/decode", () => {
       const glyph = new font.Tables.SimpleGlyph({
         numberOfContours: 2,

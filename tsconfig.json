@@ -3,7 +3,9 @@
     "target": "ES2018",
     "module": "CommonJS",
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": []
   },
-  "exclude": ["node_modules", "test"]
+  "exclude": ["src/**/*.spec.ts"],
+  "include": ["src"]
 }

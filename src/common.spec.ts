@@ -1,9 +1,9 @@
-import * as assert from "assert";
+import { describe, it, assert } from "vitest";
 import { SeqStream } from "bytestreamjs";
-import * as common from "../src/common";
+import * as common from "./common";
 
-context("common", () => {
-  context("Fixed", () => {
+describe("common", () => {
+  describe("Fixed", () => {
     it("positive", () => {
       const readStream = new SeqStream({ hexstring: "000b8000" });
 
